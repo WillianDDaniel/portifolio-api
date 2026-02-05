@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Projetos</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <style>
+        [v-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+    <div id="app" v-cloak>
+        
+        <div v-if="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+
+        <div v-if="!loading && isAuthenticated">
+            
+            <header class="bg-white shadow-sm sticky top-0 z-40">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                    
+                    <div class="flex items-center gap-4">
+                        <a href="/dashboard" class="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-gray-100" title="Voltar ao Dashboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </a>
+                        <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <span class="text-2xl">🚀</span> Meus Projetos
+                        </h1>
+                    </div>
+
+                    <a href="/projects/create" 
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+                        <span>➕ Novo Projeto</span>
+                    </a>
+                </div>
+            </header>
+
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+                <div v-if="error" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+                    <p class="font-bold">Erro</p>
+                    <p>{{ error }}</p>
+                </div>
+
+                <div v-if="projects.length === 0" class="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <div class="text-gray-400 text-5xl mb-4">📂</div>
+                    <h3 class="text-lg font-medium text-gray-900">Nenhum projeto encontrado</h3>
+                    <p class="text-gray-500 mt-1">Comece adicionando o seu primeiro trabalho.</p>
+                </div>
+
+                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <div v-for="project in projects" :key="project.id" 
+                         class="bg-white rounded-xl shadow hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col group border border-gray-100">
+                        
+                        <div class="relative h-48 bg-gray-200 overflow-hidden">
+                            <img v-if="project.imageUrl" 
+                                 :src="project.imageUrl" 
+                                 alt="Capa do projeto" 
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                            
+                            <div v-else class="flex flex-col items-center justify-center h-full text-gray-400">
+                                <span class="text-3xl mb-2">🖼️</span>
+                                <span class="text-sm">Sem imagem</span>
+                            </div>
+
+                            <div class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a :href="`/projects/edit/${project.id}`" 
+                                   class="bg-white p-2 rounded-full shadow text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
+                                   title="Editar">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                                </a>
+                                <button @click="deleteProject(project.id)" 
+                                        class="bg-white p-2 rounded-full shadow text-red-600 hover:text-red-800 hover:bg-red-50 transition-colors"
+                                        title="Excluir">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-5 flex-1 flex flex-col">
+                            
+                            <h3 class="font-bold text-lg text-gray-900 truncate mb-1" :title="getProjectTitle(project)">
+                                {{ getProjectTitle(project) }}
+                            </h3>
+                            <div class="mt-auto pt-4 grid grid-cols-2 gap-3">
+                                <a v-if="project.liveUrl" :href="project.liveUrl" target="_blank"
+                                   class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                    🌐 Ver Online
+                                </a>
+                                <span v-else class="flex items-center justify-center px-3 py-2 text-xs font-medium text-gray-400 bg-gray-100 rounded-lg cursor-not-allowed">
+                                    Offline
+                                </span>
+
+                                <a v-if="project.repoUrl" :href="project.repoUrl" target="_blank"
+                                   class="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                    💾 Código
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    isAuthenticated: false, 
+                    error: null,
+                    projects: []
+                };
+            },
+
+            async mounted() {
+                await this.checkAuthAndLoad();
+            },
+
+            methods: {
+                // 👇 Método novo para pegar o título correto
+                getProjectTitle(project) {
+                    if (!project.translations || project.translations.length === 0) {
+                        return "Sem Título";
+                    }
+                    // Tenta achar PT, senão pega o primeiro que tiver
+                    const pt = project.translations.find(t => t.language === 'pt');
+                    return pt ? pt.title : project.translations[0].title;
+                },
+
+                async checkAuthAndLoad() {
+                    try {
+                        const authRes = await fetch("/auth/me", { credentials: "include" });
+
+                        if (!authRes.ok) {
+                            window.location.href = "/";
+                            return;
+                        }
+
+                        this.isAuthenticated = true;
+                        await this.loadProjects();
+
+                    } catch (err) {
+                        window.location.href = "/";
+                    }
+                },
+
+                async loadProjects() {
+                    try {
+                        // Assume que essa rota retorna os projetos COM o include: [translations]
+                        const res = await fetch("/api/projects", { credentials: "include" });
+
+                        if (!res.ok) throw new Error("Falha ao buscar dados da API");
+
+                        this.projects = await res.json();
+                        this.loading = false;
+
+                    } catch (err) {
+                        this.error = "Não foi possível carregar os projetos.";
+                        this.loading = false;
+                    }
+                },
+
+                async deleteProject(id) {
+                    if (!confirm("Tem certeza que deseja apagar este projeto?")) return;
+
+                    try {
+                        const res = await fetch(`/api/projects/${id}`, {
+                            method: "DELETE",
+                            credentials: "include"
+                        });
+
+                        if (!res.ok) throw new Error("Erro ao excluir");
+
+                        this.projects = this.projects.filter(p => p.id !== id);
+
+                    } catch (err) {
+                        alert("Erro ao tentar excluir o projeto.");
+                    }
+                }
+            }
+        }).mount("#app");
+    </script>
+</body>
+</html>
