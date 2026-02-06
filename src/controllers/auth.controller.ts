@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import { sign } from 'hono/jwt';
 import { setCookie } from 'hono/cookie';
 import * as bcrypt from 'bcryptjs';
+import { deleteCookie } from 'hono/cookie';
 
 export const login = async (c: Context) => {
   const { email, password } = await c.req.json();
@@ -61,4 +62,19 @@ export const login = async (c: Context) => {
   });
 
   return c.json({ message: 'Logged in' });
+};
+
+export const logout = async (c: Context) => {
+
+  deleteCookie(c, 'auth_token', {
+    httpOnly: true,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax',
+  });
+
+  return c.json({
+    success: true,
+    message: 'Logged out successfully'
+  });
 };

@@ -7,6 +7,7 @@ export const getProjects = async (c: Context) => {
   const result = await db.query.projects.findMany({
     with: {
       translations: true,
+      githubStats: true,
     },
   });
   
@@ -111,6 +112,7 @@ export const getProjectById = async (c: Context) => {
       where: eq(projects.id, id),
       with: {
         translations: true,
+        githubStats: true,
       },
     });
 
