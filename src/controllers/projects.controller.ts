@@ -1,6 +1,6 @@
 import { Context } from 'hono';
 import { db } from '../db/index.js';
-import { projects, projectTranslations } from '../db/schema.js';
+import { projects, projectTranslations, githubStats } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 
 export const getProjects = async (c: Context) => {
@@ -10,30 +10,27 @@ export const getProjects = async (c: Context) => {
       githubStats: true,
     },
   });
-  
+
   return c.json(result);
 };
 
 export const createProject = async (c: Context) => {
   try {
     const body = await c.req.json();
-    const { imageUrl, liveUrl, repoUrl, translations } = body;
+    const { imageUrl, liveUrl, repoUrl, translations, githubStats: incomingGithubStats } = body;
 
-    // 1. Inserir o registo principal na tabela projects
     const insertedProjects = await db.insert(projects).values({
-      imageUrl, // URL já enviada pelo teu frontend após o upload no Cloudinary
+      imageUrl,
       liveUrl,
       repoUrl,
     }).returning();
 
     const project = insertedProjects[0];
 
-    // Se o projecto não for devolvido, a inserção falhou
     if (!project) {
       throw new Error('Falha ao inserir o projecto principal no banco de dados.');
     }
 
-    // 2. Inserir as traduções vinculadas ao ID do projecto criado
     if (translations && Array.isArray(translations) && translations.length > 0) {
       const translationsWithId = translations.map((t: any) => ({
         projectId: project.id,
@@ -41,17 +38,25 @@ export const createProject = async (c: Context) => {
         title: t.title,
         description: t.description,
       }));
-      
+
       await db.insert(projectTranslations).values(translationsWithId);
     }
 
-    // Retorna o projecto criado com status 201
+    if (incomingGithubStats) {
+      await db.insert(githubStats).values({
+        projectId: project.id,
+        stars: incomingGithubStats.stars || 0,
+        languages: incomingGithubStats.languages || [],
+        topics: incomingGithubStats.topics || [],
+      });
+    }
+
     return c.json(project, 201);
   } catch (error: any) {
     console.error('ERRO AO CRIAR PROJECTO:', error);
-    return c.json({ 
-      message: 'Erro interno ao salvar projecto', 
-      error: error.message 
+    return c.json({
+      message: 'Erro interno ao salvar projecto',
+      error: error.message
     }, 500);
   }
 };
@@ -60,24 +65,20 @@ export const updateProject = async (c: Context) => {
   const id = c.req.param('id');
   try {
     const body = await c.req.json();
-    const { imageUrl, liveUrl, repoUrl, translations } = body;
+    const { imageUrl, liveUrl, repoUrl, translations, githubStats: incomingGithubStats } = body;
 
-    // 1. Atualiza dados principais do projeto
     await db.update(projects)
-      .set({ 
-        imageUrl, 
-        liveUrl, 
-        repoUrl, 
-        updatedAt: new Date() 
+      .set({
+        imageUrl,
+        liveUrl,
+        repoUrl,
+        updatedAt: new Date()
       })
       .where(eq(projects.id, id));
 
-    // 2. Sincroniza as traduções sequencialmente
     if (translations && Array.isArray(translations)) {
-      // Primeiro remove as traduções antigas deste projeto
       await db.delete(projectTranslations).where(eq(projectTranslations.projectId, id));
-      
-      // Se houver novas traduções no corpo da requisição, insere elas
+
       if (translations.length > 0) {
         const translationsWithId = translations.map((t: any) => ({
           projectId: id,
@@ -89,6 +90,26 @@ export const updateProject = async (c: Context) => {
       }
     }
 
+    if (incomingGithubStats) {
+      await db.insert(githubStats)
+        .values({
+          projectId: id,
+          stars: incomingGithubStats.stars || 0,
+          languages: incomingGithubStats.languages || [],
+          topics: incomingGithubStats.topics || [],
+          syncedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: githubStats.projectId,
+          set: {
+            stars: incomingGithubStats.stars || 0,
+            languages: incomingGithubStats.languages || [],
+            topics: incomingGithubStats.topics || [],
+            syncedAt: new Date(),
+          },
+        });
+    }
+
     return c.json({ message: 'Projeto atualizado com sucesso' });
   } catch (error: any) {
     console.error('ERRO AO ATUALIZAR PROJETO:', error);
@@ -98,15 +119,15 @@ export const updateProject = async (c: Context) => {
 
 export const deleteProject = async (c: Context) => {
   const id = c.req.param('id');
-  
+
   await db.delete(projects).where(eq(projects.id, id));
-  
+
   return c.json({ message: 'Projeto removido com sucesso' });
 };
 
 export const getProjectById = async (c: Context) => {
   const id = c.req.param('id');
-  
+
   try {
     const project = await db.query.projects.findFirst({
       where: eq(projects.id, id),
