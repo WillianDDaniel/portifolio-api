@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Formações</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <style>
+    [v-cloak] {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+  <div id="app" v-cloak>
+
+    <div v-if="loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+
+    <div v-if="!loading && isAuthenticated">
+
+      <header class="bg-white shadow-sm sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+          <div class="flex items-center gap-4">
+            <a href="/dashboard"
+              class="text-gray-400 hover:text-blue-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+              title="Voltar ao Dashboard">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </a>
+            <h1 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <span class="text-2xl">🎓</span> Minhas Formações
+            </h1>
+          </div>
+
+          <a href="/educations/create"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+            <span>➕ Nova Formação</span>
+          </a>
+        </div>
+      </header>
+
+      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <div v-if="error" class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 text-red-700">
+          <p class="font-bold">Erro</p>
+          <p>{{ error }}</p>
+        </div>
+
+        <div v-if="educations.length === 0"
+          class="text-center py-20 bg-white rounded-xl shadow-sm border border-gray-100">
+          <div class="text-gray-400 text-5xl mb-4">📚</div>
+          <h3 class="text-lg font-medium text-gray-900">Nenhuma formação encontrada</h3>
+          <p class="text-gray-500 mt-1">Comece adicionando seus cursos e faculdades.</p>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          <div v-for="edu in educations" :key="edu.id"
+            class="bg-white rounded-xl shadow hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col group border border-gray-100">
+
+            <div class="relative h-40 bg-gray-100 overflow-hidden border-b border-gray-100">
+              <img v-if="edu.imageUrl" :src="edu.imageUrl" alt="Capa da formação"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+
+              <div v-else class="flex flex-col items-center justify-center h-full text-gray-400">
+                <span class="text-3xl mb-2">🏫</span>
+                <span class="text-sm">Sem imagem</span>
+              </div>
+
+              <div class="absolute top-2 left-2 flex flex-col gap-1">
+                <span
+                  class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded bg-white/90 shadow-sm text-gray-700">
+                  {{ formatType(edu.type) }}
+                </span>
+              </div>
+
+              <div class="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <a :href="`/educations/edit/${edu.id}`"
+                  class="bg-white p-2 rounded-full shadow text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
+                  title="Editar">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                  </svg>
+                </a>
+                <button @click="deleteEducation(edu.id)"
+                  class="bg-white p-2 rounded-full shadow text-red-600 hover:text-red-800 hover:bg-red-50 transition-colors"
+                  title="Excluir">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="p-5 flex-1 flex flex-col">
+              <span class="text-xs font-semibold text-blue-600 mb-1 tracking-wide uppercase">
+                {{ getEducationData(edu, 'institution') }}
+              </span>
+              <h3 class="font-bold text-lg text-gray-900 leading-tight mb-2" :title="getEducationData(edu, 'name')">
+                {{ getEducationData(edu, 'name') }}
+              </h3>
+
+              <div class="flex items-center gap-2 text-xs text-gray-500 mb-4 mt-1">
+                <span :class="getStatusColor(edu.status)" class="px-2 py-0.5 rounded-full font-medium border">
+                  {{ formatStatus(edu.status) }}
+                </span>
+                <span v-if="edu.durationHours" class="flex items-center gap-1">
+                  ⏱️ {{ edu.durationHours }}h
+                </span>
+              </div>
+
+              <div class="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
+                <div class="text-xs text-gray-400">
+                  {{ formatDate(edu.startDate) }}
+                  <span v-if="edu.endDate"> - {{ formatDate(edu.endDate) }}</span>
+                </div>
+
+                <a v-if="edu.certificateUrl" :href="edu.certificateUrl" target="_blank"
+                  class="flex items-center justify-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded hover:bg-blue-100 transition-colors">
+                  📜 Certificado
+                </a>
+                <span v-else class="text-xs text-gray-400 italic">
+                  Sem link
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          loading: true,
+          isAuthenticated: false,
+          error: null,
+          educations: []
+        };
+      },
+
+      async mounted() {
+        await this.checkAuthAndLoad();
+      },
+
+      methods: {
+        // Função genérica para pegar Nome ou Instituição baseado no idioma
+        getEducationData(edu, field) {
+          if (!edu.translations || edu.translations.length === 0) {
+            return "Não definido";
+          }
+          const pt = edu.translations.find(t => t.language === 'pt');
+          const translation = pt ? pt : edu.translations[0];
+          return translation[field] || "Não definido";
+        },
+
+        formatType(type) {
+          const types = {
+            'college': 'Faculdade',
+            'course': 'Curso Livre',
+            'certification': 'Certificação',
+            'bootcamp': 'Bootcamp'
+          };
+          return types[type] || type;
+        },
+
+        formatStatus(status) {
+          const statuses = {
+            'completed': 'Concluído',
+            'in_progress': 'Cursando',
+            'paused': 'Pausado'
+          };
+          return statuses[status] || status;
+        },
+
+        getStatusColor(status) {
+          const colors = {
+            'completed': 'bg-green-50 text-green-700 border-green-200',
+            'in_progress': 'bg-blue-50 text-blue-700 border-blue-200',
+            'paused': 'bg-yellow-50 text-yellow-700 border-yellow-200'
+          };
+          return colors[status] || 'bg-gray-50 text-gray-700 border-gray-200';
+        },
+
+        formatDate(dateString) {
+          if (!dateString) return '';
+          // Formata "YYYY-MM-DD" para "MM/YYYY" ou "DD/MM/YYYY"
+          const date = new Date(dateString);
+          // Adicionando fuso horário para evitar problemas de data caindo no dia anterior
+          const userTimezoneOffset = date.getTimezoneOffset() * 60000;
+          const correctedDate = new Date(date.getTime() + userTimezoneOffset);
+          return correctedDate.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+        },
+
+        async checkAuthAndLoad() {
+          try {
+            const authRes = await fetch("/auth/me", { credentials: "include" });
+
+            if (!authRes.ok) {
+              window.location.href = "/";
+              return;
+            }
+
+            this.isAuthenticated = true;
+            await this.loadEducations();
+
+          } catch (err) {
+            window.location.href = "/";
+          }
+        },
+
+        async loadEducations() {
+          try {
+            const res = await fetch("/api/educations", { credentials: "include" });
+
+            if (!res.ok) throw new Error("Falha ao buscar dados da API");
+
+            this.educations = await res.json();
+            this.loading = false;
+
+          } catch (err) {
+            this.error = "Não foi possível carregar as formações.";
+            this.loading = false;
+          }
+        },
+
+        async deleteEducation(id) {
+          if (!confirm("Tem certeza que deseja apagar esta formação?")) return;
+
+          try {
+            const res = await fetch(`/api/educations/${id}`, {
+              method: "DELETE",
+              credentials: "include"
+            });
+
+            if (!res.ok) throw new Error("Erro ao excluir");
+
+            this.educations = this.educations.filter(e => e.id !== id);
+
+          } catch (err) {
+            alert("Erro ao tentar excluir a formação.");
+          }
+        }
+      }
+    }).mount("#app");
+  </script>
+</body>
+
+</html>

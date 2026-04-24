@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova Formação</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <style>
+    [v-cloak] {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+  <div id="app" v-cloak>
+
+    <div v-if="pageLoading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+    </div>
+
+    <div v-if="!pageLoading && isAuthenticated" class="max-w-4xl mx-auto px-4 py-8">
+
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-900">Nova Formação</h1>
+          <p class="text-sm text-gray-500">Adicione um novo curso ou faculdade ao seu currículo</p>
+        </div>
+        <a href="/educations"
+          class="text-sm text-gray-600 hover:text-blue-600 font-medium flex items-center gap-1 transition-colors">
+          ← Voltar para lista
+        </a>
+      </div>
+
+      <form @submit.prevent="submitEducation"
+        class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+        <div class="p-6 md:p-8 space-y-8">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">Imagem (Logo ou Capa)</label>
+
+              <div
+                class="relative border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition-colors p-4 flex flex-col items-center justify-center text-center cursor-pointer min-h-50"
+                :class="{'border-blue-500 bg-blue-50': imagePreview}">
+
+                <input type="file" accept="image/*" @change="onFileChange"
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+
+                <div v-if="imagePreview" class="w-full h-full relative">
+                  <img :src="imagePreview" class="max-h-48 mx-auto rounded shadow-sm object-contain" />
+                  <p class="text-xs text-blue-600 mt-2 font-medium">Clique para trocar</p>
+                </div>
+
+                <div v-else class="text-gray-500">
+                  <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path
+                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <p class="mt-1 text-sm">Clique ou arraste a imagem</p>
+                  <p class="text-xs text-gray-400">PNG, JPG, GIF até 5MB</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Formação</label>
+                  <select v-model="form.type" required
+                    class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm bg-white">
+                    <option value="college">Faculdade / Universidade</option>
+                    <option value="course">Curso Livre</option>
+                    <option value="certification">Certificação</option>
+                    <option value="bootcamp">Bootcamp</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select v-model="form.status" required
+                    class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm bg-white">
+                    <option value="completed">Concluído</option>
+                    <option value="in_progress">Cursando</option>
+                    <option value="paused">Pausado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
+                  <input type="date" v-model="form.startDate" required
+                    class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Data de Fim <span
+                      class="text-gray-400 font-normal">(Opcional)</span></label>
+                  <input type="date" v-model="form.endDate"
+                    class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Carga Horária (horas)</label>
+                  <input type="number" v-model="form.durationHours" placeholder="Ex: 120" min="0"
+                    class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">URL do Certificado</label>
+                  <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span class="text-gray-500 sm:text-sm">🔗</span>
+                    </div>
+                    <input type="url" v-model="form.certificateUrl" placeholder="https://..."
+                      class="pl-10 block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 border shadow-sm">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-gray-200">
+
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">Conteúdo & Traduções</h3>
+              <button type="button" @click="addTranslation"
+                class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                + Adicionar Idioma
+              </button>
+            </div>
+
+            <div class="space-y-6">
+              <div v-for="(t, index) in form.translations" :key="index"
+                class="bg-gray-50 p-5 rounded-lg border border-gray-200 relative group transition-all hover:border-blue-200">
+
+                <button v-if="index !== 0" type="button" @click="removeTranslation(index)"
+                  class="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Remover idioma">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clip-rule="evenodd" />
+                  </svg>
+                </button>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div class="md:col-span-1">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Idioma</label>
+                    <select v-model="t.language" :disabled="index === 0"
+                      class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 border shadow-sm bg-white">
+                      <option value="pt">🇧🇷 Português</option>
+                      <option value="en">🇺🇸 English</option>
+                      <option value="es">🇪🇸 Español</option>
+                    </select>
+                  </div>
+
+                  <div class="md:col-span-1">
+                    <label
+                      class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Instituição</label>
+                    <input type="text" v-model="t.institution" placeholder="Ex: USP, Udemy..." required
+                      class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm">
+                  </div>
+
+                  <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Nome da
+                      Formação</label>
+                    <input type="text" v-model="t.name" placeholder="Ex: Análise e Desenvolvimento de Sistemas" required
+                      class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm">
+                  </div>
+
+                  <div class="md:col-span-4 mt-2">
+                    <label
+                      class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Descrição</label>
+                    <textarea v-model="t.description" rows="3"
+                      placeholder="Descreva o que você aprendeu, TCC, matérias principais..." required
+                      class="block w-full border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm py-2 px-3 border shadow-sm"></textarea>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="error" class="bg-red-50 border-l-4 border-red-500 p-4 rounded text-red-700 text-sm">
+            {{ error }}
+          </div>
+
+          <div v-if="success" class="bg-green-50 border-l-4 border-green-500 p-4 rounded text-green-700 text-sm">
+            Formação cadastrada com sucesso! Redirecionando...
+          </div>
+
+        </div>
+
+        <div class="bg-gray-50 px-6 py-4 flex items-center justify-end border-t border-gray-200">
+          <button type="submit" :disabled="submitting"
+            class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-wait transition-all">
+
+            <svg v-if="submitting" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+              </circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+
+            {{ submitting ? statusMessage : "Salvar Formação" }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          // Estados de UI
+          pageLoading: true,
+          submitting: false,
+          isAuthenticated: false,
+
+          // Dados e Feedback
+          error: null,
+          success: false,
+          statusMessage: "Salvando...",
+
+          // Formulário
+          selectedFile: null,
+          imagePreview: null,
+
+          form: {
+            type: "college",
+            status: "completed",
+            startDate: "",
+            endDate: "",
+            durationHours: "",
+            certificateUrl: "",
+            translations: [
+              { language: "pt", institution: "", name: "", description: "" }
+            ]
+          }
+        };
+      },
+
+      async mounted() {
+        await this.checkAuth();
+      },
+
+      methods: {
+        async checkAuth() {
+          try {
+            const res = await fetch("/auth/me", { credentials: "include" });
+
+            if (!res.ok) {
+              window.location.href = "/";
+              return;
+            }
+
+            this.isAuthenticated = true;
+          } catch {
+            window.location.href = "/";
+          } finally {
+            this.pageLoading = false;
+          }
+        },
+
+        addTranslation() {
+          this.form.translations.push({
+            language: "en", institution: "", name: "", description: ""
+          });
+        },
+
+        removeTranslation(index) {
+          this.form.translations.splice(index, 1);
+        },
+
+        onFileChange(event) {
+          const file = event.target.files && event.target.files[0];
+          if (file) {
+            this.selectedFile = file;
+            this.error = null;
+            this.success = false;
+
+            const reader = new FileReader();
+            reader.onload = (e) => { this.imagePreview = e.target.result; };
+            reader.readAsDataURL(file);
+          }
+        },
+
+        async submitEducation() {
+          this.submitting = true;
+          this.error = null;
+          this.success = false;
+          this.statusMessage = "Validando...";
+
+          try {
+            const mainName = this.form.translations[0]?.name?.trim();
+            if (!mainName) throw new Error("O nome principal (Português) é obrigatório.");
+
+            // Opcional: Se quiser que a imagem seja opcional, pode remover esse throw
+            if (!this.selectedFile) throw new Error("Selecione uma imagem para a formação.");
+
+            this.statusMessage = "Autorizando upload...";
+            const sigRes = await fetch(
+              `/api/uploads/cloudinary-signature?projectTitle=${encodeURIComponent(mainName)}`,
+              { credentials: "include" }
+            );
+
+            if (!sigRes.ok) throw new Error("Erro ao iniciar upload de imagem.");
+            const sigData = await sigRes.json();
+
+            this.statusMessage = "Enviando imagem...";
+            const formData = new FormData();
+            formData.append("file", this.selectedFile);
+            formData.append("api_key", sigData.apiKey);
+            formData.append("timestamp", sigData.timestamp);
+            formData.append("signature", sigData.signature);
+            formData.append("public_id", sigData.publicId);
+
+            const uploadRes = await fetch(
+              `https://api.cloudinary.com/v1_1/${sigData.cloudName}/image/upload`,
+              { method: "POST", body: formData }
+            );
+
+            if (!uploadRes.ok) throw new Error("Falha no upload da imagem.");
+            const uploadData = await uploadRes.json();
+
+            this.statusMessage = "Salvando dados...";
+
+            // Preparando os dados para enviar para a API
+            const payload = {
+              type: this.form.type,
+              status: this.form.status,
+              startDate: this.form.startDate,
+              endDate: this.form.endDate || null,
+              durationHours: this.form.durationHours ? parseInt(this.form.durationHours) : null,
+              certificateUrl: this.form.certificateUrl,
+              imageUrl: uploadData.secure_url,
+              translations: this.form.translations
+            };
+
+            const apiRes = await fetch("/api/educations", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify(payload)
+            });
+
+            if (!apiRes.ok) throw new Error("Erro ao salvar a formação no banco de dados.");
+
+            this.success = true;
+            this.statusMessage = "Concluído!";
+
+            setTimeout(() => {
+              window.location.href = '/educations';
+            }, 1500);
+
+          } catch (err) {
+            this.error = err.message || "Erro inesperado ao salvar.";
+            this.submitting = false;
+          }
+        }
+      }
+    }).mount("#app");
+  </script>
+</body>
+
+</html>
