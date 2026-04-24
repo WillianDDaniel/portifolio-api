@@ -1,150 +1,213 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Painel Admin</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Painel Admin</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    [v-cloak] { display: none !important; }
-  </style>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+    <style>
+        [v-cloak] {
+            display: none !important;
+        }
+    </style>
 </head>
+
 <body class="bg-gray-50 text-gray-800 min-h-screen">
 
-  <div id="app" v-cloak>
-    
-    <div v-if="checkingAuth" class="fixed inset-0 bg-white flex items-center justify-center z-50">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-    </div>
+    <div id="app" v-cloak>
 
-    <div v-else class="min-h-screen flex flex-col">
-        
-        <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                
-                <div class="flex items-center gap-2">
-                    <div class="bg-blue-600 text-white p-1.5 rounded-lg">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
-                    </div>
-                    <span class="font-bold text-gray-900 text-lg">Painel Admin</span>
-                </div>
+        <div v-if="checkingAuth" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
 
-                <button @click="logout" class="text-sm text-gray-500 hover:text-red-600 font-medium flex items-center gap-2 transition-colors">
-                    <span>Sair</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                </button>
-            </div>
-        </header>
+        <div v-else class="min-h-screen flex flex-col">
 
-        <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-            
-            <div class="mb-8">
-                <h1 class="text-2xl font-bold text-gray-900">Bem-vindo de volta!</h1>
-                <p class="text-gray-500">O que você gostaria de gerenciar hoje?</p>
-            </div>
+            <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                <a href="/projects" 
-                   class="group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer relative overflow-hidden">
-                    
-                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                    </div>
-
-                    <div class="relative z-10">
-                        <div class="h-12 w-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    <div class="flex items-center gap-2">
+                        <div class="bg-blue-600 text-white p-1.5 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                             </svg>
                         </div>
-                        <h2 class="text-lg font-bold text-gray-900 mb-1">Meus Projetos</h2>
-                        <p class="text-sm text-gray-500">Gerenciar, editar e adicionar novos projetos ao portfólio.</p>
-                        <div class="mt-4 text-blue-600 text-sm font-medium flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                            Acessar <span class="text-lg">→</span>
-                        </div>
+                        <span class="font-bold text-gray-900 text-lg">Painel Admin</span>
                     </div>
-                </a>
 
-                <div class="group bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300 relative opacity-75 cursor-not-allowed">
-                     <div class="h-12 w-12 bg-gray-200 text-gray-400 rounded-lg flex items-center justify-center mb-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <button @click="logout"
+                        class="text-sm text-gray-500 hover:text-red-600 font-medium flex items-center gap-2 transition-colors">
+                        <span>Sair</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                    </div>
-                    <h2 class="text-lg font-bold text-gray-500 mb-1">Configurações</h2>
-                    <p class="text-sm text-gray-400">Ajustes gerais do sistema.</p>
-                    <span class="absolute top-4 right-4 bg-gray-200 text-gray-500 text-xs px-2 py-1 rounded font-medium">Em breve</span>
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+                <div class="mb-8">
+                    <h1 class="text-2xl font-bold text-gray-900">Bem-vindo de volta!</h1>
+                    <p class="text-gray-500">O que você gostaria de gerenciar hoje?</p>
                 </div>
 
-                <a href="https://willianddaniel.github.io/" target="_blank"
-                   class="group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-green-300 transition-all cursor-pointer">
-                    <div class="h-12 w-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                    </div>
-                    <h2 class="text-lg font-bold text-gray-900 mb-1">Visualizar Site</h2>
-                    <p class="text-sm text-gray-500">Abrir o site público em uma nova aba.</p>
-                </a>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-            </div>
-        </main>
+                    <a href="/projects"
+                        class="group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 transition-all cursor-pointer relative overflow-hidden">
+
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-blue-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div
+                                class="h-12 w-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                                </svg>
+                            </div>
+                            <h2 class="text-lg font-bold text-gray-900 mb-1">Meus Projetos</h2>
+                            <p class="text-sm text-gray-500">Gerenciar, editar e adicionar novos projetos ao portfólio.
+                            </p>
+                            <div
+                                class="mt-4 text-blue-600 text-sm font-medium flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Acessar <span class="text-lg">→</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/educations"
+                        class="group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-purple-300 transition-all cursor-pointer relative overflow-hidden">
+
+                        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-purple-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                    d="M12 14l9-5-9-5-9 5 9 5z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                    d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                            </svg>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div
+                                class="h-12 w-12 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222" />
+                                </svg>
+                            </div>
+                            <h2 class="text-lg font-bold text-gray-900 mb-1">Minhas Formações</h2>
+                            <p class="text-sm text-gray-500">Gerenciar, editar e adicionar faculdades e cursos ao
+                                portfólio.</p>
+                            <div
+                                class="mt-4 text-purple-600 text-sm font-medium flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                Acessar <span class="text-lg">→</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <div
+                        class="group bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300 relative opacity-75 cursor-not-allowed">
+                        <div
+                            class="h-12 w-12 bg-gray-200 text-gray-400 rounded-lg flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-500 mb-1">Configurações</h2>
+                        <p class="text-sm text-gray-400">Ajustes gerais do sistema.</p>
+                        <span
+                            class="absolute top-4 right-4 bg-gray-200 text-gray-500 text-xs px-2 py-1 rounded font-medium">Em
+                            breve</span>
+                    </div>
+
+                    <a href="https://willianddaniel.github.io/" target="_blank"
+                        class="group bg-white p-6 rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:border-green-300 transition-all cursor-pointer">
+                        <div
+                            class="h-12 w-12 bg-green-50 text-green-600 rounded-lg flex items-center justify-center mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </div>
+                        <h2 class="text-lg font-bold text-gray-900 mb-1">Visualizar Site</h2>
+                        <p class="text-sm text-gray-500">Abrir o site público em uma nova aba.</p>
+                    </a>
+
+                </div>
+            </main>
+        </div>
+
     </div>
 
-  </div>
+    <script>
+        const { createApp } = Vue;
 
-  <script>
-    const { createApp } = Vue;
+        createApp({
+            data() {
+                return {
+                    checkingAuth: true
+                }
+            },
+            async mounted() {
+                await this.checkAuth();
+            },
+            methods: {
+                async checkAuth() {
+                    try {
+                        const res = await fetch("/auth/me", { credentials: "include" });
+                        if (!res.ok) throw new Error("Unauthorized");
+                    } catch {
+                        window.location.href = "/";
+                    } finally {
+                        this.checkingAuth = false;
+                    }
+                },
 
-    createApp({
-      data() {
-        return {
-            checkingAuth: true
-        }
-      },
-      async mounted() {
-        await this.checkAuth();
-      },
-      methods: {
-        async checkAuth() {
-            try {
-                const res = await fetch("/auth/me", { credentials: "include" });
-                if (!res.ok) throw new Error("Unauthorized");
-            } catch {
-                window.location.href = "/";
-            } finally {
-                this.checkingAuth = false;
+                async logout() {
+                    if (!confirm("Deseja realmente sair?")) return;
+
+                    try {
+                        // Tenta chamar rota de logout se existir, senão só redireciona
+                        await fetch("/auth/logout", { method: "POST", credentials: "include" }).catch(() => { });
+
+                        // Redireciona para home ou login
+                        window.location.href = "/";
+                    } catch (error) {
+                        console.error("Erro ao sair", error);
+                    }
+                }
             }
-        },
-
-        async logout() {
-            if(!confirm("Deseja realmente sair?")) return;
-            
-            try {
-                // Tenta chamar rota de logout se existir, senão só redireciona
-                await fetch("/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
-                
-                // Redireciona para home ou login
-                window.location.href = "/";
-            } catch (error) {
-                console.error("Erro ao sair", error);
-            }
-        }
-      }
-    }).mount("#app");
-  </script>
+        }).mount("#app");
+    </script>
 
 </body>
+
 </html>
