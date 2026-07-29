@@ -17,7 +17,7 @@ export default function CreateBlogPost() {
     isSubmitting, globalError,
     createBlogPost, generateAIContent, isGenerating,
     register, control, errors, fields, appendTranslation, removeTranslation,
-    handleSlugDebounce
+    handleSlugDebounce, isStylizing, stylizeAIContent, generateTableOfContents
   } = useBlogPosts();
 
   return (
@@ -48,6 +48,9 @@ export default function CreateBlogPost() {
           onSubmitAction={createBlogPost}
           generateAIContent={generateAIContent}
           isGenerating={isGenerating}
+          isStylizing={isStylizing}
+          stylizeAIContent={stylizeAIContent}
+          generateTableOfContents={generateTableOfContents}
           handleSlugDebounce={handleSlugDebounce}
         />
       </main>

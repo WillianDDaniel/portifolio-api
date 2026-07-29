@@ -82,4 +82,81 @@ describe('BlogPrompts', () => {
       expect(result).toBe('Write the main text with high quality and depth.');
     });
   });
+
+  describe('handleContent', () => {
+    it('should return content if provided', () => {
+      expect(BlogPrompts.handleContent('My valid content', 'pt')).toBe('My valid content');
+    });
+
+    it('should return Portuguese default string if content is missing and language is pt', () => {
+      expect(BlogPrompts.handleContent(undefined, 'pt')).toBe('Não informado');
+      expect(BlogPrompts.handleContent(null, 'pt')).toBe('Não informado');
+      expect(BlogPrompts.handleContent('', 'pt')).toBe('Não informado');
+    });
+
+    it('should return Spanish default string if content is missing and language is es', () => {
+      expect(BlogPrompts.handleContent(undefined, 'es')).toBe('No informado');
+    });
+
+    it('should return English default string if content is missing and language is en', () => {
+      expect(BlogPrompts.handleContent(undefined, 'en')).toBe('Not Informed');
+    });
+
+    it('should return English default string if content is missing and language is unsupported', () => {
+      expect(BlogPrompts.handleContent(undefined, 'fr')).toBe('Not Informed');
+    });
+  });
+
+  describe('buildStylingSystemPrompt', () => {
+    it('should return Portuguese styling prompt for pt', () => {
+      const result = BlogPrompts.buildStylingSystemPrompt('pt');
+      expect(result).toContain('Você é um Engenheiro Front-end especialista em Tailwind CSS.');
+      expect(result).toContain('Sua ÚNICA função é atuar como um injetor de Tailwind CSS.');
+    });
+
+    it('should return Spanish styling prompt for es', () => {
+      const result = BlogPrompts.buildStylingSystemPrompt('es');
+      expect(result).toContain('Eres un Ingeniero Front-end experto en Tailwind CSS.');
+      expect(result).toContain('Sua ÚNICA função é atuar como um injetor de Tailwind CSS.'); // As commonRules estão em PT no seu código
+    });
+
+    it('should return English styling prompt for en', () => {
+      const result = BlogPrompts.buildStylingSystemPrompt('en');
+      expect(result).toContain('You are a Frontend Engineer expert in Tailwind CSS.');
+      expect(result).toContain('Sua ÚNICA função é atuar como um injetor de Tailwind CSS.');
+    });
+
+    it('should return English styling prompt as default for unsupported language', () => {
+      const result = BlogPrompts.buildStylingSystemPrompt('fr' as any);
+      expect(result).toContain('You are a Frontend Engineer expert in Tailwind CSS.');
+    });
+  });
+
+  describe('getStylingUserPrompt', () => {
+    const mockHtml = '<p>Test paragraph</p>';
+
+    it('should return Portuguese instruction for pt', () => {
+      const result = BlogPrompts.getStylingUserPrompt(mockHtml, 'pt');
+      expect(result).toContain('Reescreva o HTML abaixo injetando as classes Tailwind nas tags:');
+      expect(result).toContain(mockHtml);
+    });
+
+    it('should return Spanish instruction for es', () => {
+      const result = BlogPrompts.getStylingUserPrompt(mockHtml, 'es');
+      expect(result).toContain('Reescribe el HTML a continuación inyectando las clases Tailwind en las etiquetas:');
+      expect(result).toContain(mockHtml);
+    });
+
+    it('should return English instruction for en', () => {
+      const result = BlogPrompts.getStylingUserPrompt(mockHtml, 'en');
+      expect(result).toContain('Rewrite the HTML below by injecting Tailwind classes into the tags:');
+      expect(result).toContain(mockHtml);
+    });
+
+    it('should return English instruction as default for unsupported language', () => {
+      const result = BlogPrompts.getStylingUserPrompt(mockHtml, 'fr' as any);
+      expect(result).toContain('Rewrite the HTML below by injecting Tailwind classes into the tags:');
+      expect(result).toContain(mockHtml);
+    });
+  });
 });

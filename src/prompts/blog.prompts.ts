@@ -91,9 +91,51 @@ export const BlogPrompts = {
   },
 
   handleContent(content: string | undefined | null, language: string) {
-    if (!content && language !== 'en') return 'Not Informed';
-    if (!content && language === 'pt') return 'Não informado';
-    if (!content && language === 'es') return 'No informado';
-    return content;
+    if (content) return content;
+    if (language === 'pt') return 'Não informado';
+    if (language === 'es') return 'No informado';
+    return 'Not Informed';
+  },
+
+
+  // Styling
+  buildStylingSystemPrompt: (language: SupportedLanguage): string => {
+    const commonRules = `Sua ÚNICA função é atuar como um injetor de Tailwind CSS. 
+Você receberá um HTML bruto. Você DEVE modificar as tags HTML (como <h2>, <p>, <ul>) adicionando o atributo "class" com utilitários do Tailwind.
+
+REGRAS ABSOLUTAS:
+1. INJETE CLASSES: Modifique as tags HTML. (Ex: mude <p> para <p class="text-gray-700 leading-relaxed mb-4">).
+2. PRESERVE O TEXTO: Nunca altere, traduza ou resuma o conteúdo de texto dentro das tags.
+3. SEM MARKDOWN: Não envolva a resposta em \`\`\`html. Devolva apenas o código começando com a primeira tag.
+4. SEM ESTRUTURA BASE: Não adicione <html>, <head> ou <body>.
+5. DESIGN: Crie um visual de blog limpo (textos cinza-escuro, títulos em negrito com margem superior, listas bem espaçadas).
+
+EXEMPLO DE ENTRADA:
+<h2>Introdução</h2>
+<p>Este é um texto com <strong>destaque</strong>.</p>
+
+EXEMPLO DE SAÍDA ESPERADA:
+<h2 class="text-2xl font-bold text-gray-900 mt-8 mb-4">Introdução</h2>
+<p class="text-base text-gray-700 leading-relaxed mb-4">Este é um texto com <strong class="font-semibold text-indigo-600">destaque</strong>.</p>`;
+
+    switch (language) {
+      case 'pt':
+        return `Você é um Engenheiro Front-end especialista em Tailwind CSS.\n\n${commonRules}`;
+      case 'es':
+        return `Eres un Ingeniero Front-end experto en Tailwind CSS.\n\n${commonRules}`;
+      case 'en':
+      default:
+        return `You are a Frontend Engineer expert in Tailwind CSS.\n\n${commonRules}`;
+    }
+  },
+
+  getStylingUserPrompt(htmlContent: string, language: SupportedLanguage): string {
+    const instruction = language === 'pt'
+      ? 'Reescreva o HTML abaixo injetando as classes Tailwind nas tags:'
+      : language === 'es'
+        ? 'Reescribe el HTML a continuación inyectando las clases Tailwind en las etiquetas:'
+        : 'Rewrite the HTML below by injecting Tailwind classes into the tags:';
+
+    return `${instruction}\n\n${htmlContent}`;
   }
 };

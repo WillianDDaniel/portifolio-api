@@ -11,13 +11,14 @@ import {
   deleteBlogPost,
 
   generateBlogPost,
+  stylizeBlogPost,
   checkSlug
 } from '../controllers/blog-posts.controller.js';
 
 import { authMiddleware } from '../middlewares/auth.js';
 
 import { zValidator } from '@hono/zod-validator';
-import { blogPostSchema, generateBlogPostSchema } from '../schemas/blog-posts.schema.js';
+import { blogPostSchema, generateBlogPostSchema, stylizeBlogPostSchema } from '../schemas/blog-posts.schema.js';
 
 const blogPost = new Hono();
 
@@ -35,5 +36,5 @@ blogPost.put('/:id', authMiddleware, zValidator('json', blogPostSchema), updateB
 blogPost.delete('/:id', authMiddleware, deleteBlogPost);
 
 blogPost.post('/generate', authMiddleware, zValidator('json', generateBlogPostSchema), generateBlogPost);
-
+blogPost.post('/stylize', authMiddleware, zValidator('json', stylizeBlogPostSchema), stylizeBlogPost);
 export default blogPost;

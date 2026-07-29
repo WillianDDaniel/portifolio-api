@@ -13,6 +13,8 @@ import { blogPostSchema } from '../../../src/schemas/blog-posts.schema';
 
 import type { NewBlogPost, BlogPost } from '@/typings/BlogPosts';
 
+import { injectTableOfContents } from '@/helpers/blogPostsHelpers'
+
 import toast from 'react-hot-toast';
 
 const initialForm: NewBlogPost = {
@@ -33,6 +35,7 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
   const hasConflict = Object.values(slugConflicts).some(Boolean);
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isStylizing, setIsStylizing] = useState(false);
 
   const {
     imagePreview,
@@ -228,6 +231,69 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     }
   };
 
+  const stylizeAIContent = async (index: number, providerId: string) => {
+    setIsStylizing(true);
+    setGlobalError(null);
+
+    try {
+      // 1. Pega o conteúdo atual (cru) e o idioma
+      const currentContent = getValues(`translations.${index}.content` as `translations.${number}.content`);
+      const currentLanguage = getValues(`translations.${index}.language` as `translations.${number}.language`) || 'en';
+
+      if (!currentContent || currentContent.trim() === '') {
+        toast.error('Não há conteúdo para estilizar.');
+        return;
+      }
+
+      // 2. Faz a chamada para a nossa nova rota
+      const response = await BlogPostService.stylize({
+        htmlContent: currentContent,
+        language: currentLanguage,
+        providerId
+      });
+
+      if (!response.body) throw new Error('Stream não disponível');
+
+      // 3. Prepara para ler a resposta da IA e limpa o campo para a nova injeção
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let newHtml = '';
+
+      setValue(`translations.${index}.content` as `translations.${number}.content`, '', {
+        shouldValidate: false
+      });
+
+      // 4. Loop de leitura do stream
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        newHtml += chunk;
+
+        // Limpeza básica para evitar bugs no editor
+        const cleanHtml = newHtml.replace(/&nbsp;/g, ' ').replace(/\n+/g, '\n');
+
+        // Atualiza o formulário (e a tela) em tempo real
+        setValue(`translations.${index}.content` as `translations.${number}.content`, cleanHtml, {
+          shouldValidate: true,
+          shouldDirty: true
+        });
+      }
+
+      toast.success('Conteúdo estilizado com sucesso!');
+
+    } catch (error) {
+      console.error("Erro ao estilizar com IA:", error);
+      const err = error as Error;
+      setGlobalError(err.message || 'Falha ao estilizar conteúdo com IA');
+      toast.error('Ocorreu um erro ao estilizar o conteúdo');
+    } finally {
+      setIsStylizing(false);
+    }
+  };
+
   const checkSlugAvailability = async (language: string, slug: string) => {
     if (!slug) return false;
 
@@ -237,6 +303,43 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     } catch (error) {
       console.error("Erro ao checar slug:", error);
       return false;
+    }
+  };
+
+  const generateTableOfContents = (index: number) => {
+    const currentContent = getValues(`translations.${index}.content` as `translations.${number}.content`);
+    const currentLang = getValues(`translations.${index}.language` as `translations.${number}.language`);
+
+    if (!currentContent) {
+      toast.error('Gere o conteúdo primeiro!');
+      return;
+    }
+
+    let label = 'Neste artigo:';
+    if (currentLang === 'en') label = 'In this article:';
+    if (currentLang === 'es') label = 'En este artículo:';
+
+    try {
+      // Tenta injetar o sumário
+      const newHtml = injectTableOfContents(currentContent, label);
+
+      // Se passou, atualiza o formulário
+      setValue(`translations.${index}.content` as `translations.${number}.content`, newHtml, {
+        shouldValidate: true,
+        shouldDirty: true
+      });
+
+      toast.success('Sumário gerado com sucesso!');
+
+    } catch (error: any) {
+
+      // 👇 Captura a nossa validação personalizada
+      if (error.message === 'INSUFFICIENT_HEADINGS') {
+        toast.error('O texto precisa ter pelo menos 3 subtítulos para gerar um sumário.');
+      } else {
+        toast.error('Ocorreu um erro ao gerar o sumário.');
+        console.error(error);
+      }
     }
   };
 
@@ -287,9 +390,16 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     imagePreview,
     handleFileChange,
 
-    // AI
+    // AI Generation
     isGenerating,
     generateAIContent,
+
+    // AI Stylization
+    isStylizing,
+    stylizeAIContent,
+
+    // Table of Contents
+    generateTableOfContents,
 
     // Utils
     checkSlugAvailability,

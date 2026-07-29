@@ -11,8 +11,13 @@ vi.mock('ai', () => ({
   streamText: vi.fn(),
 }));
 
+vi.mock('@ai-sdk/google', () => ({
+  createGoogle: vi.fn(() => mockModelProvider),
+}));
+
 import { AiService } from '../../services/ai.service.js';
 import { createOpenAI } from '@ai-sdk/openai';
+import { createGoogle } from '@ai-sdk/google';
 import { streamText } from 'ai';
 
 describe('AiService', () => {
@@ -46,6 +51,16 @@ describe('AiService', () => {
       expect(() => {
         new AiService('unsupported' as any, 'some-model', 'some-key');
       }).toThrow('Provedor não suportado: unsupported');
+    });
+
+    it('should initialize successfully with gemini provider', () => {
+      const service = new AiService('gemini', 'gemini-1.5-pro', 'gemini-api-key-123');
+
+      expect(createGoogle).toHaveBeenCalledWith({
+        apiKey: 'gemini-api-key-123',
+      });
+      expect(mockModelProvider).toHaveBeenCalledWith('gemini-1.5-pro');
+      expect(service['model']).toBe(mockModel);
     });
   });
 

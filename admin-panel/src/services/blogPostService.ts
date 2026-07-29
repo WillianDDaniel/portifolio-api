@@ -71,5 +71,25 @@ export const BlogPostService = {
       credentials: 'include'
     });
     return handleResponse(res);
-  }
+  },
+
+  async stylize(payload: {
+    htmlContent: string;
+    language: string;
+    providerId: string;
+  }): Promise<Response> {
+    const res = await fetch('/api/blog-posts/stylize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Erro ao estilizar conteúdo com IA');
+    }
+
+    return res;
+  },
 };

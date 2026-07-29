@@ -77,12 +77,8 @@ export const getBlogPostById = async (c: Context) => {
 
 export const createBlogPost = async (c: Context) => {
   try {
-    console.log('\n[createBlogPost] 🔵 Iniciando requisição de criação...');
 
-    // 1. Loga o payload recebido antes de desestruturar
     const rawBody = await c.req.json<BlogPost>();
-    console.log('[createBlogPost] Payload recebido:', JSON.stringify(rawBody, null, 2));
-
     const { translations, ...postData } = rawBody;
 
     const newPostData = {
@@ -90,36 +86,21 @@ export const createBlogPost = async (c: Context) => {
       publishedAt: postData.isPublished ? new Date() : null,
     };
 
-    // 2. Loga como os dados ficaram montados para o banco
-    console.log('[createBlogPost] Dados do Post formatados:', newPostData);
-    console.log('[createBlogPost] Traduções extraídas:', translations);
-
-    // 3. Marca o início da inserção no banco
-    console.log('[createBlogPost] Chamando createBlogPostRecord...');
     const newPost = await createBlogPostRecord(newPostData, translations);
 
     if (!newPost) {
-      console.warn('[createBlogPost] ⚠️ Falha na criação: createBlogPostRecord não retornou o post (422).');
       return c.json({
         error: 'blog_posts.error.create',
         message: 'Blog post not created'
       }, 422);
     }
 
-    console.log('[createBlogPost] ✅ Post criado com sucesso!');
     return c.json(newPost, 201);
 
   } catch (error: any) {
-    // 4. Loga o erro COMPLETO no terminal, incluindo onde ele aconteceu
-    console.error('\n[createBlogPost] ❌ ERRO 500 CAPTURADO:');
-    console.error(error); // Mostra o objeto do erro inteiro
-    if (error.stack) {
-      console.error('[createBlogPost] Stack Trace:', error.stack);
-    }
-
     return c.json({
       error: 'blog_posts.error.create',
-      message: error.message || 'Erro interno no servidor'
+      message: "Create Failed"
     }, 500);
   }
 };
@@ -229,5 +210,62 @@ export const checkSlug = async (c: Context) => {
 
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.check_slug', message: error.message }, 500);
+  }
+};
+
+export const stylizeBlogPost = async (c: Context) => {
+  try {
+    const { htmlContent, language, providerId } = await c.req.json<{
+      htmlContent: string;
+      language: 'en' | 'pt' | 'es';
+      providerId: string;
+    }>();
+
+    if (!htmlContent || htmlContent.trim() === '') {
+      return c.json({
+        error: 'blog_posts.error.empty_content',
+        message: 'O conteúdo está vazio. Gere ou escreva um texto antes de estilizar.'
+      }, 400);
+    }
+
+    const aiProviderRecord = await findAiProviderById(providerId);
+    if (!aiProviderRecord) {
+      return c.json({
+        error: 'blog_posts.error.provider_not_found',
+        message: 'Provedor de IA não encontrado.'
+      }, 404);
+    }
+
+    if (!aiProviderRecord.isActive) {
+      return c.json({
+        error: 'blog_posts.error.provider_inactive',
+        message: 'O provedor de IA selecionado está desativado no painel.'
+      }, 400);
+    }
+
+    const model = DEFAULT_MODELS[aiProviderRecord.provider];
+    if (!model) {
+      return c.json({
+        error: 'blog_posts.error.invalid_model',
+        message: 'Modelo padrão não definido para este provedor.'
+      }, 400);
+    }
+
+    const systemPrompt = BlogPrompts.buildStylingSystemPrompt(language);
+    const userPrompt = BlogPrompts.getStylingUserPrompt(htmlContent, language);
+
+    const aiService = new AiService(aiProviderRecord.provider, model, aiProviderRecord.key);
+    const result = await aiService.streamHtmlContent(systemPrompt, userPrompt);
+
+    return new Response(toTextStream({ stream: result.stream }), {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+
+  } catch (error: any) {
+    return c.json({ error: 'blog_posts.error.stylize', message: error.message }, 500);
   }
 };

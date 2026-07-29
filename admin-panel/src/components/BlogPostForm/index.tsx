@@ -23,6 +23,9 @@ interface BlogPostFormProps {
   onSubmitAction: (e?: React.BaseSyntheticEvent) => Promise<void>;
   generateAIContent: (prompt: string, index: number, providerId: string) => Promise<void>;
   isGenerating: boolean;
+  isStylizing: boolean;
+  stylizeAIContent: (index: number, providerId: string) => Promise<void>;
+  generateTableOfContents: any
   handleSlugDebounce: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => void;
 }
 
@@ -40,7 +43,11 @@ export default function BlogPostForm({
   onSubmitAction,
   generateAIContent,
   isGenerating,
-  handleSlugDebounce
+  isStylizing,
+  stylizeAIContent,
+  generateTableOfContents,
+  handleSlugDebounce,
+
 }: BlogPostFormProps) {
   const { t } = useTranslation();
 
@@ -102,6 +109,9 @@ export default function BlogPostForm({
             removeTranslation={removeTranslation}
             onGenerateAI={generateAIContent}
             isGenerating={isGenerating}
+            isStylizing={isStylizing}
+            onStylizeAI={stylizeAIContent}
+            onGenerateTableOfContents={generateTableOfContents}
             handleSlugDebounce={handleSlugDebounce}
           />
         ))}

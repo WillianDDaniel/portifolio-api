@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import {
   getBlogPosts,
   getBlogPostBySlug,
@@ -7,6 +7,9 @@ import {
   createBlogPost,
   updateBlogPost,
   deleteBlogPost,
+  generateBlogPost,
+  checkSlug,
+  stylizeBlogPost
 } from '../../controllers/blog-posts.controller.js';
 
 import {
@@ -16,7 +19,10 @@ import {
   createBlogPostRecord,
   updateBlogPostRecord,
   deleteBlogPostRecord,
+  checkSlugExists
 } from '../../repositories/blog-posts.repository.js';
+
+import { findAiProviderById } from '../../repositories/ai-providers.repository.js';
 
 vi.mock('../../repositories/blog-posts.repository.js', () => ({
   findAllBlogPosts: vi.fn(),
@@ -25,11 +31,59 @@ vi.mock('../../repositories/blog-posts.repository.js', () => ({
   createBlogPostRecord: vi.fn(),
   updateBlogPostRecord: vi.fn(),
   deleteBlogPostRecord: vi.fn(),
+  checkSlugExists: vi.fn(),
+}));
+
+vi.mock('../../prompts/blog.prompts.js', () => ({
+  BlogPrompts: {
+    buildHtmlSystemPrompt: vi.fn().mockReturnValue('mock system prompt'),
+    getUserPrompt: vi.fn().mockReturnValue('mock user prompt'),
+    buildStylingSystemPrompt: vi.fn().mockReturnValue('mock styling system prompt'),
+    getStylingUserPrompt: vi.fn().mockReturnValue('mock styling user prompt'),
+  }
+}));
+
+vi.mock('../../constants/index.js', () => ({
+  DEFAULT_MODELS: {
+    openai: 'gpt-3.5-turbo',
+    anthropic: 'claude-3-haiku-20240307'
+  }
+}));
+
+vi.mock('../../repositories/ai-providers.repository.js', () => ({
+  findAiProviderById: vi.fn(),
+}));
+
+vi.mock('../../services/ai.service.js', () => {
+  return {
+    AiService: class {
+      streamHtmlContent = vi.fn().mockResolvedValue({ stream: {} });
+    }
+  };
+});
+
+vi.mock('ai', () => ({
+  toTextStream: vi.fn().mockReturnValue('mock-stream'),
 }));
 
 describe('Blog Posts Controller', () => {
   let mockContext: any;
   let mockParams: Record<string, string>;
+
+  beforeAll(() => {
+    if (typeof global.Response === 'undefined') {
+      global.Response = class Response {
+        body: any;
+        init: any;
+        headers: any;
+        constructor(body: any, init: any) {
+          this.body = body;
+          this.init = init;
+          this.headers = new Map(Object.entries(init?.headers || {}));
+        }
+      } as any;
+    }
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -346,6 +400,22 @@ describe('Blog Posts Controller', () => {
       );
       expect(response.status).toBe(422);
     });
+
+    it('should return 500 when repository throws error during update', async () => {
+      mockParams = { id: 'post-123' };
+      mockContext.req.json.mockResolvedValue(validPayload);
+
+      const errorMsg = 'Database update error';
+      vi.mocked(findBlogPostById).mockRejectedValue(new Error(errorMsg));
+
+      const response = await updateBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.update', message: errorMsg },
+        500
+      );
+      expect(response.status).toBe(500);
+    });
   });
 
   describe('deleteBlogPost', () => {
@@ -386,6 +456,181 @@ describe('Blog Posts Controller', () => {
         500
       );
       expect(response.status).toBe(500);
+    });
+  });
+
+  describe('checkSlug', () => {
+    it('should return 200 with exists status', async () => {
+      mockParams = { lang: 'en', slug: 'test-slug' };
+      mockContext.req.query = vi.fn().mockReturnValue('123');
+      vi.mocked(checkSlugExists).mockResolvedValue(true);
+
+      const response = await checkSlug(mockContext);
+
+      expect(checkSlugExists).toHaveBeenCalledWith('en', 'test-slug', '123');
+      expect(mockContext.json).toHaveBeenCalledWith({ exists: true }, 200);
+      expect(response.status).toBe(200);
+    });
+
+    it('should return 500 when repository throws error', async () => {
+      mockParams = { lang: 'en', slug: 'test-slug' };
+      mockContext.req.query = vi.fn().mockReturnValue(undefined);
+      vi.mocked(checkSlugExists).mockRejectedValue(new Error('DB Error'));
+
+      const response = await checkSlug(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.check_slug', message: 'DB Error' },
+        500
+      );
+      expect(response.status).toBe(500);
+    });
+  });
+
+  describe('generateBlogPost', () => {
+    const validPayload = {
+      prompt: 'Test prompt',
+      providerId: '123e4567-e89b-12d3-a456-426614174000',
+      postPartialData: { language: 'en', title: 'Test' }
+    };
+
+    it('should return 404 if AI provider is not found', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue(null);
+
+      const response = await generateBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.provider_not_found', message: expect.any(String) },
+        404
+      );
+    });
+
+    it('should return 400 if AI provider is inactive', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue({ isActive: false } as any);
+
+      const response = await generateBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.provider_inactive', message: expect.any(String) },
+        400
+      );
+    });
+
+    it('should return 400 if model is invalid', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue({ isActive: true, provider: 'invalid-provider' } as any);
+
+      const response = await generateBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.invalid_model', message: expect.any(String) },
+        400
+      );
+    });
+
+    it('should return text stream on success', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue({ isActive: true, provider: 'openai', key: 'key' } as any);
+
+      const response = await generateBlogPost(mockContext);
+
+      expect(response).toBeInstanceOf(Response);
+      expect(response.headers.get('Content-Type')).toBe('text/event-stream');
+    });
+
+    it('should return 500 when service throws error', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockRejectedValue(new Error('Service Error'));
+
+      const response = await generateBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.generate', message: 'Service Error' },
+        500
+      );
+    });
+  });
+
+  describe('stylizeBlogPost', () => {
+    const validPayload = {
+      htmlContent: '<p>Test</p>',
+      language: 'en',
+      providerId: '123e4567-e89b-12d3-a456-426614174000'
+    };
+
+    it('should return 400 if htmlContent is empty', async () => {
+      mockContext.req.json.mockResolvedValue({ ...validPayload, htmlContent: '   ' });
+
+      const response = await stylizeBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.empty_content', message: expect.any(String) },
+        400
+      );
+    });
+
+    it('should return 404 if AI provider is not found', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue(null);
+
+      const response = await stylizeBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.provider_not_found', message: expect.any(String) },
+        404
+      );
+    });
+
+    it('should return 400 if AI provider is inactive', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue({ isActive: false } as any);
+
+      const response = await stylizeBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.provider_inactive', message: expect.any(String) },
+        400
+      );
+    });
+
+    it('should return text stream on success', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue({ isActive: true, provider: 'openai', key: 'key' } as any);
+
+      const response = await stylizeBlogPost(mockContext);
+
+      expect(response).toBeInstanceOf(Response);
+      expect(response.headers.get('Content-Type')).toBe('text/event-stream');
+    });
+
+    it('should return 500 when service throws error', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockRejectedValue(new Error('Service Error'));
+
+      const response = await stylizeBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.stylize', message: 'Service Error' },
+        500
+      );
+    });
+
+    it('should return 400 if model is invalid', async () => {
+      mockContext.req.json.mockResolvedValue(validPayload);
+      vi.mocked(findAiProviderById).mockResolvedValue({
+        isActive: true,
+        provider: 'invalid-provider',
+        key: 'key'
+      } as any);
+
+      await stylizeBlogPost(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        { error: 'blog_posts.error.invalid_model', message: expect.any(String) },
+        400
+      );
     });
   });
 });

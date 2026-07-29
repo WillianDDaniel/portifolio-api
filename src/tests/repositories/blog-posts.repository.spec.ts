@@ -1,4 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ne } from 'drizzle-orm';
+
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    eq: vi.fn().mockReturnValue({ mockEq: true }),
+    ne: vi.fn().mockReturnValue({ mockNe: true }),
+    and: vi.fn().mockImplementation((...args) => args),
+  };
+});
 
 vi.mock('../../db/index.js', () => ({
   db: {
@@ -35,7 +46,9 @@ import {
   createBlogPostRecord,
   updateBlogPostRecord,
   deleteBlogPostRecord,
+  checkSlugExists,
 } from '../../repositories/blog-posts.repository.js';
+
 import { db } from '../../db/index.js';
 import { blogPosts, blogPostTranslations } from '../../db/schema.js';
 
@@ -267,6 +280,38 @@ describe('Blog Posts Repository', () => {
       const result = await deleteBlogPostRecord('post-123');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('checkSlugExists', () => {
+    it('should return true if the slug exists for the given language', async () => {
+      vi.mocked(db.query.blogPostTranslations.findFirst).mockResolvedValue({ id: 'trans-123' } as any);
+
+      const result = await checkSlugExists('en', 'existing-slug');
+
+      expect(db.query.blogPostTranslations.findFirst).toHaveBeenCalledWith({
+        where: expect.any(Array),
+        columns: { id: true },
+      });
+      expect(result).toBe(true);
+    });
+
+    it('should return false if the slug does not exist', async () => {
+      vi.mocked(db.query.blogPostTranslations.findFirst).mockResolvedValue(undefined);
+
+      const result = await checkSlugExists('en', 'non-existing-slug');
+
+      expect(result).toBe(false);
+    });
+
+    it('should apply excludePostId filter when provided', async () => {
+      vi.mocked(db.query.blogPostTranslations.findFirst).mockResolvedValue(undefined);
+
+      const excludeId = 'post-123';
+      const result = await checkSlugExists('en', 'some-slug', excludeId);
+
+      expect(ne).toHaveBeenCalledWith(blogPostTranslations.postId, excludeId);
+      expect(result).toBe(false);
     });
   });
 });

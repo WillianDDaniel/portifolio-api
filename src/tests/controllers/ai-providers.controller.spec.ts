@@ -106,6 +106,22 @@ describe('AI Providers Controller', () => {
       );
       expect(result.status).toBe(500);
     });
+
+    it('should return 400 if the key is empty or missing', async () => {
+      const invalidPayload = { ...validPayload, key: '   ' };
+      mockContext.req.json.mockResolvedValue(invalidPayload);
+
+      const result = await createAiProvider(mockContext);
+
+      expect(mockContext.json).toHaveBeenCalledWith(
+        {
+          error: 'settings.error.ai_provider_key_required',
+          message: 'Key is required for new providers'
+        },
+        400
+      );
+      expect(result.status).toBe(400);
+    });
   });
 
   describe('updateAiProvider', () => {

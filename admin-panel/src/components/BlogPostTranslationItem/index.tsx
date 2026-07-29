@@ -10,6 +10,7 @@ import FormError from '@/components/FormError';
 import Textarea from '@/components/Textarea';
 import RichTextEditor from '@/components/RichTextEditor';
 import AiGeneratorAssistent from '@/components/AiGeneratorAssistent';
+import AiStylizeAssistent from '../AiStylizeAssistent';
 
 interface BlogPostTranslationItemProps {
   index: number;
@@ -20,6 +21,9 @@ interface BlogPostTranslationItemProps {
 
   onGenerateAI: (prompt: string, index: number, providerId: string) => Promise<void>;
   isGenerating: boolean;
+  isStylizing: boolean;
+  onStylizeAI: (index: number, providerId: string) => Promise<void>;
+  onGenerateTableOfContents: any
   handleSlugDebounce: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => void;
 }
 
@@ -31,7 +35,10 @@ export default function BlogPostTranslationItem({
   removeTranslation,
   onGenerateAI,
   isGenerating,
-  handleSlugDebounce
+  handleSlugDebounce,
+  isStylizing,
+  onStylizeAI,
+  onGenerateTableOfContents
 }: BlogPostTranslationItemProps) {
   const { t } = useTranslation();
 
@@ -125,17 +132,49 @@ export default function BlogPostTranslationItem({
           index={index}
         />
 
-        <div className="md:col-span-12">
-          <Controller
-            name={`translations.${index}.content`}
-            control={control}
-            render={({ field: { onChange, value } }) => (
-              <RichTextEditor
-                value={value || ''}
-                onChange={onChange}
+        <div className="md:col-span-12 mt-2">
+
+          {/* Barra de Ferramentas do Editor */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3">
+            <label className="block text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+              {t('forms.blog_posts.labels.rich_content', { defaultValue: 'Post Content' })}
+            </label>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Botão de Sumário */}
+              <button
+                type="button"
+                onClick={() => onGenerateTableOfContents(index)}
+                disabled={isGenerating || isStylizing}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border bg-white text-blue-600 border-blue-200 hover:bg-blue-50 transition-colors dark:bg-zinc-800 dark:text-blue-400 dark:border-zinc-700 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Gera um índice automático baseado nos títulos H2 e H3"
+              >
+                <span>📑</span>
+                {t('forms.blog_posts.buttons.generate_toc', { defaultValue: 'Gerar Sumário' })}
+              </button>
+
+              {/* Botão de Estilização */}
+              <AiStylizeAssistent
+                isStylizing={isStylizing}
+                onStylizeAI={onStylizeAI}
+                index={index}
+                disabled={isGenerating}
               />
-            )}
-          />
+            </div>
+          </div>
+
+          <div className={`${isStylizing ? 'opacity-50 pointer-events-none' : ''} transition-opacity duration-200`}>
+            <Controller
+              name={`translations.${index}.content`}
+              control={control}
+              render={({ field: { onChange, value } }) => (
+                <RichTextEditor
+                  value={value || ''}
+                  onChange={onChange}
+                />
+              )}
+            />
+          </div>
 
           <FormError
             error={!!errors?.translations?.[index]?.content}

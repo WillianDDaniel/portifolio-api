@@ -36,3 +36,15 @@ export const generateBlogPostSchema = z.object({
 }).strict();
 
 export type GenerateBlogPost = z.infer<typeof generateBlogPostSchema>;
+
+export const stylizeBlogPostSchema = z.object({
+  htmlContent: z.string().min(1, { message: 'errors.blog_posts.html_required' }),
+
+  language: z.enum(['pt', 'en', 'es'] as const, {
+    message: 'errors.blog_posts.language_invalid'
+  }).default('en'),
+
+  providerId: z.uuid({ message: 'errors.blog_posts.invalid_provider_id' }),
+}).strict();
+
+export type StylizeBlogPost = z.infer<typeof stylizeBlogPostSchema>;

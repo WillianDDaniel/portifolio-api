@@ -1,7 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { eq } from 'drizzle-orm';
+
+vi.mock('drizzle-orm', async (importOriginal) => {
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    eq: vi.fn(),
+  };
+});
 
 vi.mock('../../db/index.js', () => ({
   db: {
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn(),
+    }),
     insert: vi.fn().mockReturnValue({
       values: vi.fn().mockReturnThis(),
       returning: vi.fn(),
@@ -19,10 +32,12 @@ vi.mock('../../db/index.js', () => ({
 }));
 
 import {
+  findAiProviderById,
   createAiProviderRecord,
   updateAiProviderRecord,
   deleteAiProviderRecord,
 } from '../../repositories/ai-providers.repository.js';
+
 import { db } from '../../db/index.js';
 import { aiProviders } from '../../db/schema.js';
 
@@ -174,6 +189,50 @@ describe('AI Providers Repository', () => {
       vi.mocked(db.delete).mockReturnValue(mockDeleteChain as any);
 
       const result = await deleteAiProviderRecord(id);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findAiProviderById', () => {
+    it('should return the provider if found', async () => {
+      const id = 'provider-123';
+      const mockProvider = {
+        id,
+        settingsId: 'settings-123',
+        name: 'OpenAI Test',
+        provider: 'openai',
+        key: 'key',
+        isActive: true
+      };
+
+      const mockSelectChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([mockProvider]),
+      };
+
+      vi.mocked(db.select).mockReturnValue(mockSelectChain as any);
+
+      const result = await findAiProviderById(id);
+
+      expect(db.select).toHaveBeenCalled();
+      expect(mockSelectChain.from).toHaveBeenCalledWith(aiProviders);
+      expect(mockSelectChain.where).toHaveBeenCalled();
+      expect(eq).toHaveBeenCalledWith(aiProviders.id, id);
+      expect(result).toEqual(mockProvider);
+    });
+
+    it('should return null if the provider is not found', async () => {
+      const id = 'provider-123';
+
+      const mockSelectChain = {
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockResolvedValue([]),
+      };
+
+      vi.mocked(db.select).mockReturnValue(mockSelectChain as any);
+
+      const result = await findAiProviderById(id);
 
       expect(result).toBeNull();
     });

@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { updateProfileSchema, changePasswordSchema } from '../../schemas/users.schema.js'
+
+import {
+  updateProfileSchema,
+  changePasswordSchema,
+  passwordFormSchema
+} from '../../schemas/users.schema.js'
 
 describe('Users Zod Schemas', () => {
   describe('updateProfileSchema', () => {
@@ -193,6 +198,55 @@ describe('Users Zod Schemas', () => {
       expect(result.success).toBe(false)
       if (!result.success) {
         expect(result.error.issues[0].message).toBe('errors.users.new_password')
+      }
+    })
+  })
+
+  describe('passwordFormSchema', () => {
+    const validPasswordFormPayload = {
+      oldPassword: 'securePassword123',
+      newPassword: 'newSecurePassword456',
+      confirmPassword: 'newSecurePassword456',
+    }
+
+    it('should validate successfully when newPassword and confirmPassword match', () => {
+      const result = passwordFormSchema.safeParse(validPasswordFormPayload)
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data).toEqual(validPasswordFormPayload)
+      }
+    })
+
+    it('should fail if newPassword and confirmPassword do not match', () => {
+      const mismatchedPayload = {
+        ...validPasswordFormPayload,
+        confirmPassword: 'differentPassword789',
+      }
+
+      const result = passwordFormSchema.safeParse(mismatchedPayload)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const issue = result.error.issues.find(i => i.path.includes('confirmPassword'))
+
+        expect(issue).toBeDefined()
+        expect(issue?.message).toBe('errors.profile.password_mismatch')
+      }
+    })
+
+    it('should fail if confirmPassword does not meet the minimum length', () => {
+      const shortConfirmPasswordPayload = {
+        ...validPasswordFormPayload,
+        confirmPassword: '12345',
+      }
+
+      const result = passwordFormSchema.safeParse(shortConfirmPasswordPayload)
+
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const issue = result.error.issues.find(i => i.path.includes('confirmPassword'))
+        expect(issue?.message).toBe('errors.users.new_password')
       }
     })
   })
