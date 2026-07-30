@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
 import { type UseFormRegister, type FieldErrors, type Control, Controller } from 'react-hook-form';
 import type { NewBlogPost } from '@/typings/BlogPosts';
 
@@ -9,8 +8,7 @@ import Select from '@/components/Select';
 import FormError from '@/components/FormError';
 import Textarea from '@/components/Textarea';
 import RichTextEditor from '@/components/RichTextEditor';
-import AiGeneratorAssistent from '@/components/AiGeneratorAssistent';
-import AiStylizeAssistent from '../AiStylizeAssistent';
+import AiEditorHeader from '@/components/AiEditorHeader';
 
 interface BlogPostTranslationItemProps {
   index: number;
@@ -18,12 +16,11 @@ interface BlogPostTranslationItemProps {
   control: Control<NewBlogPost>;
   errors: FieldErrors<NewBlogPost>;
   removeTranslation: (index: number) => void;
-
   onGenerateAI: (prompt: string, index: number, providerId: string) => Promise<void>;
   isGenerating: boolean;
   isStylizing: boolean;
   onStylizeAI: (index: number, providerId: string) => Promise<void>;
-  onGenerateTableOfContents: any
+  onGenerateTableOfContents: (index: number) => void;
   handleSlugDebounce: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) => void;
 }
 
@@ -41,8 +38,6 @@ export default function BlogPostTranslationItem({
   onGenerateTableOfContents
 }: BlogPostTranslationItemProps) {
   const { t } = useTranslation();
-
-
   const [aiPrompt, setAiPrompt] = useState('');
 
   return (
@@ -100,7 +95,6 @@ export default function BlogPostTranslationItem({
             {...register(`translations.${index}.slug` as const)}
             onChange={(e) => {
               register(`translations.${index}.slug`).onChange(e);
-
               handleSlugDebounce(e, index);
             }}
           >
@@ -124,44 +118,16 @@ export default function BlogPostTranslationItem({
           <FormError error={!!errors?.translations?.[index]?.excerpt} message={t(errors?.translations?.[index]?.excerpt?.message as string)} />
         </div>
 
-        <AiGeneratorAssistent
-          aiPrompt={aiPrompt}
-          setAiPrompt={setAiPrompt}
-          isGenerating={isGenerating}
-          onGenerateAI={onGenerateAI}
-          index={index}
-        />
-
-        <div className="md:col-span-12 mt-2">
-
-          {/* Barra de Ferramentas do Editor */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-3">
-            <label className="block text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {t('forms.blog_posts.labels.rich_content', { defaultValue: 'Post Content' })}
-            </label>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Botão de Sumário */}
-              <button
-                type="button"
-                onClick={() => onGenerateTableOfContents(index)}
-                disabled={isGenerating || isStylizing}
-                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg border bg-white text-blue-600 border-blue-200 hover:bg-blue-50 transition-colors dark:bg-zinc-800 dark:text-blue-400 dark:border-zinc-700 dark:hover:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Gera um índice automático baseado nos títulos H2 e H3"
-              >
-                <span>📑</span>
-                {t('forms.blog_posts.buttons.generate_toc', { defaultValue: 'Gerar Sumário' })}
-              </button>
-
-              {/* Botão de Estilização */}
-              <AiStylizeAssistent
-                isStylizing={isStylizing}
-                onStylizeAI={onStylizeAI}
-                index={index}
-                disabled={isGenerating}
-              />
-            </div>
-          </div>
+        <div className="md:col-span-12 mt-4 flex flex-col">
+          <AiEditorHeader
+            index={index}
+            aiPrompt={aiPrompt}
+            setAiPrompt={setAiPrompt}
+            isGenerating={isGenerating}
+            onGenerateAI={onGenerateAI}
+            isStylizing={isStylizing}
+            onStylizeAI={onStylizeAI}
+          />
 
           <div className={`${isStylizing ? 'opacity-50 pointer-events-none' : ''} transition-opacity duration-200`}>
             <Controller
@@ -171,6 +137,7 @@ export default function BlogPostTranslationItem({
                 <RichTextEditor
                   value={value || ''}
                   onChange={onChange}
+                  onGenerateTableOfContents={() => onGenerateTableOfContents(index)}
                 />
               )}
             />
@@ -181,7 +148,6 @@ export default function BlogPostTranslationItem({
             message={t(errors?.translations?.[index]?.content?.message as string)}
           />
         </div>
-
       </div>
     </div>
   );

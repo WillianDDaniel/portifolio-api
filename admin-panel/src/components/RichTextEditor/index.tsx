@@ -1,37 +1,25 @@
-import { useRef, useMemo, useCallback, useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css';
-
-import CodeEditor from '@uiw/react-textarea-code-editor';
-import { html_beautify } from 'js-beautify';
-
+import JoditEditor from 'jodit-react';
 import { UploadService } from '@/services/uploadService';
 
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
+  onGenerateTableOfContents?: () => void;
 }
 
-interface QuillEditorInstance {
-  getSelection: () => { index: number; length: number } | null;
-  getLength: () => number;
-  insertEmbed: (index: number, type: string, value: string) => void;
-}
-
-export default function RichTextEditor({ value, onChange }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, onGenerateTableOfContents }: RichTextEditorProps) {
   const { t } = useTranslation();
-  const quillRef = useRef<ReactQuill>(null);
-  const [showSource, setShowSource] = useState(false);
   const [editorTheme, setEditorTheme] = useState<'light' | 'dark'>('light');
+
+  const editorRef = useRef(null);
 
   useEffect(() => {
     const checkTheme = () => {
       const isDark = document.documentElement.classList.contains('dark');
       setEditorTheme(isDark ? 'dark' : 'light');
     };
-
     checkTheme();
 
     const observer = new MutationObserver(checkTheme);
@@ -39,116 +27,78 @@ export default function RichTextEditor({ value, onChange }: RichTextEditorProps)
       attributes: true,
       attributeFilter: ['class'],
     });
-
     return () => observer.disconnect();
   }, []);
 
-  const getDecodedAndFormattedSourceCode = (html: string) => {
-    if (!html) return '';
+  const config = useMemo(() => ({
+    readonly: false,
+    theme: editorTheme === 'dark' ? 'dark' : 'default',
+    height: 500,
+    toolbarAdaptive: true,
+    disablePlugins: [],
+    showCharsCounter: false,
+    showWordsCounter: false,
+    showXPathInStatusbar: false,
 
-    const txt = document.createElement('textarea');
-    txt.innerHTML = html;
-    const decoded = txt.value.replace(/\u00a0/g, ' ');
+    buttons: [
+      'paragraph', 'font', 'fontsize', '|',
+      'bold', 'italic', 'underline', 'strikethrough', '|',
+      'brush', '|',
+      'align', 'outdent', 'indent', '|',
+      'ul', 'ol', '|',
+      'generateToc', 'link', 'customImage', 'video', '|',
+      'eraser', 'copyformat', 'selectall', '|',
+      'undo', 'redo', '|',
+      'fullsize', 'source'
+    ],
 
-    return html_beautify(decoded, {
-      indent_size: 2,
-      wrap_line_length: 120,
-      preserve_newlines: false,
-    });
-  };
-
-  const imageHandler = useCallback(() => {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) {
-        try {
-          const url = await UploadService.uploadImage(file, 'blog-posts', `inline-${Date.now()}`);
-          const quill = quillRef.current?.getEditor() as QuillEditorInstance | undefined;
-
-          if (quill) {
-            const range = quill.getSelection();
-            const position = range ? range.index : quill.getLength();
-            quill.insertEmbed(position, 'image', url);
+    controls: {
+      generateToc: {
+        icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="jodit-icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
+        tooltip: t('forms.blog_posts.labels.generate_toc', { defaultValue: 'Generate Table of Contents' }),
+        exec: () => {
+          if (onGenerateTableOfContents) {
+            onGenerateTableOfContents();
           }
-        } catch (error) {
-          console.error(t('blog_posts.editor.errors.upload_log'), error);
-          alert(t('blog_posts.editor.errors.upload_alert'));
+        }
+      },
+
+      customImage: {
+        icon: 'image',
+        tooltip: t('forms.blog_posts.labels.tooltip', { defaultValue: 'Insert Image (Upload)' }),
+        exec: async (editor: { selection: { insertImage: (url: string) => void } }) => {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.click();
+
+          input.onchange = async () => {
+            const file = input.files?.[0];
+            if (file) {
+              try {
+                const url = await UploadService.uploadImage(file, 'blog-posts', `inline-${Date.now()}`);
+                editor.selection.insertImage(url);
+              } catch (error) {
+                console.error(t('blog_posts.editor.errors.upload_log'), error);
+                alert(t('blog_posts.editor.errors.upload_alert'));
+              }
+            }
+          };
         }
       }
-    };
-  }, [t]);
-
-  const modules = useMemo(() => ({
-    toolbar: {
-      container: [
-        [{ 'font': [] }, { 'header': [2, 3, 4, false] }],
-        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'align': [] }],
-        ['link', 'image', 'video'],
-        ['clean']
-      ],
-      handlers: {
-        image: imageHandler
-      }
     }
-  }), [imageHandler]);
+  }), [editorTheme, t, onGenerateTableOfContents]);
 
   return (
     <div className="rich-text-wrapper relative flex flex-col gap-2">
-      <div className="flex justify-between">
-        <label className="block text-sm font-semibold text-zinc-900 dark:text-zinc-100 mb-2 ml-1 transition-colors duration-300">
-          {t('pages.blog_posts.create.sections.post_content', { defaultValue: 'Content' })}
-        </label>
-
-        <button
-          type="button"
-          onClick={() => setShowSource(!showSource)}
-          className="text-xs font-medium px-3 py-1.5 rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700 transition-colors flex items-center gap-1.5 shadow-sm"
-        >
-          {showSource ? (
-            <>
-              <span className="text-sm">👁️</span> {t('forms.blog_posts.buttons.preview')}
-            </>
-          ) : (
-            <>
-              <span className="text-sm">🧑‍💻</span> {t('forms.blog_posts.buttons.source_code')}
-            </>
-          )}
-        </button>
-      </div>
-
-      <div className="rich-text-container bg-white dark:bg-zinc-900 rounded-lg overflow-hidden border border-gray-300 dark:border-zinc-600">
-        {showSource ? (
-          <div className="w-full min-h-75 resize-y overflow-auto bg-gray-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100">
-            <CodeEditor
-              value={getDecodedAndFormattedSourceCode(value)}
-              language="html"
-              placeholder={t('blog_posts.editor.placeholders.html')}
-              onChange={(e) => onChange(e.target.value)}
-              padding={16}
-              data-color-mode={editorTheme} // Injeta o tema dinâmico (resolve o contraste)
-              className="w-full h-full min-h-75 outline-none font-mono text-sm bg-transparent"
-              style={{
-                fontFamily: 'ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace',
-                backgroundColor: 'transparent',
-              }}
-            />
-          </div>
-        ) : (
-          <ReactQuill
-            ref={quillRef}
-            theme="snow"
-            value={value || ''}
-            onChange={onChange}
-            modules={modules}
-            className="dark:text-white [&_.ql-editor]:min-h-75"
-          />
-        )}
+      <div className="rich-text-container rounded-lg overflow-hidden border border-gray-300 dark:border-zinc-600 shadow-sm mt-1">
+        <JoditEditor
+          ref={editorRef}
+          value={value}
+          config={config}
+          onBlur={newContent => onChange(newContent)}
+          onChange={() => { }}
+        />
       </div>
     </div>
   );

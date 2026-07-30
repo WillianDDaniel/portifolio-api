@@ -121,11 +121,11 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     try {
       await BlogPostService.delete(id);
       setBlogPosts(prev => prev.filter(post => post.id !== id));
-      toast.success('Post excluido com sucesso');
+      toast.success(t('hooks.use_blog_posts.messages.delete_success', { defaultValue: 'Post deleted successfully' }));
     } catch (error) {
       const err = error as ApiError;
       console.error(err);
-      toast.error('Ocorreu um erro ao excluir o post');
+      toast.error(t('hooks.use_blog_posts.messages.delete_error', { defaultValue: 'Error deleting post' }));
     }
   };
 
@@ -133,9 +133,10 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     if (hasConflict) {
       Object.entries(slugConflicts).forEach(([index, isConflict]) => {
         if (isConflict) {
+          const message = t('hooks.use_blog_posts.messages.slug_in_use', { defaultValue: 'Slug already in use' });
           setError(`translations.${index}.slug` as `translations.${number}.slug`, {
             type: 'manual',
-            message: 'Este slug já está em uso'
+            message: message
           });
         }
       });
@@ -157,10 +158,10 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
 
       if (id) {
         await BlogPostService.update(id, payload);
-        toast.success('Post atualizado com sucesso');
+        toast.success(t('hooks.use_blog_posts.messages.update_success', { defaultValue: 'Post updated successfully' }));
       } else {
         await BlogPostService.create(payload);
-        toast.success('Post criado com sucesso');
+        toast.success(t('hooks.use_blog_posts.messages.create_success', { defaultValue: 'Post created successfully' }));
       }
 
       setSelectedFile(null);
@@ -169,7 +170,7 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
       const err = error as ApiError;
       const errorKey = err.error;
       setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown'));
-      toast.error('Ocorreu um erro ao criar o post');
+      toast.error(t('hooks.use_blog_posts.messages.save_error', { defaultValue: 'Error saving post' }));
     }
   };
 
@@ -219,13 +220,12 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
         });
       }
 
-      toast.success('Conteúdo gerado com sucesso');
+      toast.success(t('hooks.use_blog_posts.messages.generate_success', { defaultValue: 'Content generated successfully' }));
 
     } catch (error) {
-      console.error("Erro na IA:", error);
       const err = error as Error;
-      setGlobalError(err.message || 'Falha ao gerar conteúdo com IA');
-      toast.error('Ocorreu um erro ao gerar o conteúdo');
+      setGlobalError(err.message || t('hooks.use_blog_posts.messages.generate_ai_fallback_error', { defaultValue: 'Error generating content' }));
+      toast.error(t('hooks.use_blog_posts.messages.generate_error', { defaultValue: 'Error generating content' }));
     } finally {
       setIsGenerating(false);
     }
@@ -236,16 +236,14 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     setGlobalError(null);
 
     try {
-      // 1. Pega o conteúdo atual (cru) e o idioma
       const currentContent = getValues(`translations.${index}.content` as `translations.${number}.content`);
       const currentLanguage = getValues(`translations.${index}.language` as `translations.${number}.language`) || 'en';
 
       if (!currentContent || currentContent.trim() === '') {
-        toast.error('Não há conteúdo para estilizar.');
+        toast.error(t('hooks.use_blog_posts.messages.stylize_no_content', { defaultValue: 'No content to stylize' }));
         return;
       }
 
-      // 2. Faz a chamada para a nossa nova rota
       const response = await BlogPostService.stylize({
         htmlContent: currentContent,
         language: currentLanguage,
@@ -254,7 +252,6 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
 
       if (!response.body) throw new Error('Stream não disponível');
 
-      // 3. Prepara para ler a resposta da IA e limpa o campo para a nova injeção
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let newHtml = '';
@@ -263,7 +260,6 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
         shouldValidate: false
       });
 
-      // 4. Loop de leitura do stream
       while (true) {
         const { done, value } = await reader.read();
 
@@ -272,23 +268,20 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
         const chunk = decoder.decode(value, { stream: true });
         newHtml += chunk;
 
-        // Limpeza básica para evitar bugs no editor
         const cleanHtml = newHtml.replace(/&nbsp;/g, ' ').replace(/\n+/g, '\n');
 
-        // Atualiza o formulário (e a tela) em tempo real
         setValue(`translations.${index}.content` as `translations.${number}.content`, cleanHtml, {
           shouldValidate: true,
           shouldDirty: true
         });
       }
 
-      toast.success('Conteúdo estilizado com sucesso!');
+      toast.success(t('hooks.use_blog_posts.messages.stylize_success', { defaultValue: 'Content stylized successfully' }));
 
     } catch (error) {
-      console.error("Erro ao estilizar com IA:", error);
       const err = error as Error;
-      setGlobalError(err.message || 'Falha ao estilizar conteúdo com IA');
-      toast.error('Ocorreu um erro ao estilizar o conteúdo');
+      setGlobalError(err.message || t('hooks.use_blog_posts.messages.stylize_ai_fallback_error', { defaultValue: 'Error stylizing content' }));
+      toast.error(t('hooks.use_blog_posts.messages.stylize_error', { defaultValue: 'Error stylizing content' }));
     } finally {
       setIsStylizing(false);
     }
@@ -301,7 +294,7 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
       const response = await BlogPostService.checkSlug(language, slug, options?.editId);
       return response.exists;
     } catch (error) {
-      console.error("Erro ao checar slug:", error);
+      console.error(error);
       return false;
     }
   };
@@ -311,33 +304,31 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     const currentLang = getValues(`translations.${index}.language` as `translations.${number}.language`);
 
     if (!currentContent) {
-      toast.error('Gere o conteúdo primeiro!');
+      toast.error(t('hooks.use_blog_posts.messages.toc_no_content', { defaultValue: 'No content to generate table of contents' }));
       return;
     }
 
-    let label = 'Neste artigo:';
-    if (currentLang === 'en') label = 'In this article:';
-    if (currentLang === 'es') label = 'En este artículo:';
+    const label = t('forms.blog_posts.labels.toc_label', {
+      defaultValue: 'Neste artigo:',
+      lng: currentLang
+    });
 
     try {
-      // Tenta injetar o sumário
       const newHtml = injectTableOfContents(currentContent, label);
 
-      // Se passou, atualiza o formulário
       setValue(`translations.${index}.content` as `translations.${number}.content`, newHtml, {
         shouldValidate: true,
         shouldDirty: true
       });
 
-      toast.success('Sumário gerado com sucesso!');
+      toast.success(t('hooks.use_blog_posts.messages.toc_success', { defaultValue: 'Table of contents generated successfully' }));
 
-    } catch (error: any) {
+    } catch (error: unknown) {
 
-      // 👇 Captura a nossa validação personalizada
-      if (error.message === 'INSUFFICIENT_HEADINGS') {
-        toast.error('O texto precisa ter pelo menos 3 subtítulos para gerar um sumário.');
+      if (error instanceof Error && error.message === 'INSUFFICIENT_HEADINGS') {
+        toast.error(t('hooks.use_blog_posts.messages.toc_insufficient_headings', { defaultValue: 'Insufficient headings to generate table of contents' }));
       } else {
-        toast.error('Ocorreu um erro ao gerar o sumário.');
+        toast.error(t('hooks.use_blog_posts.messages.toc_error', { defaultValue: 'Error generating table of contents' }));
         console.error(error);
       }
     }
@@ -359,9 +350,10 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
 
         if (exists) {
           setSlugConflicts(prev => ({ ...prev, [index]: true }));
+          const message = t('hooks.use_blog_posts.messages.slug_in_use', { defaultValue: 'Slug already in use' })
           setError(`translations.${index}.slug`, {
             type: 'manual',
-            message: 'Este slug já está em uso'
+            message: message
           });
         } else {
           setSlugConflicts(prev => ({ ...prev, [index]: false }));

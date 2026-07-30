@@ -11,10 +11,8 @@ interface AiSelectorProps {
 }
 
 export default function AiSelector({
-  providers,
-  selectedProvider,
-  onProviderChange,
-  disabled = false,
+  providers, selectedProvider,
+  onProviderChange, disabled = false,
 }: AiSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)

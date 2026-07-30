@@ -1,5 +1,4 @@
 export const injectTableOfContents = (html: string, tocLabel: string = 'Neste artigo:'): string => {
-  // Verificação rápida inicial
   if (!html || !html.includes('<h2')) {
     throw new Error('INSUFFICIENT_HEADINGS');
   }
@@ -7,10 +6,8 @@ export const injectTableOfContents = (html: string, tocLabel: string = 'Neste ar
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, 'text/html');
 
-  // Busca todos os H2 e H3
   const headings = doc.querySelectorAll('h2, h3');
 
-  // 👇 AQUI: Validação de quantidade mínima
   if (headings.length < 3) {
     throw new Error('INSUFFICIENT_HEADINGS');
   }
@@ -23,7 +20,8 @@ export const injectTableOfContents = (html: string, tocLabel: string = 'Neste ar
     const text = heading.textContent || `topico-${index}`;
 
     const slug = text.toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^\w\s-]/g, '')
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');

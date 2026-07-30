@@ -12,7 +12,11 @@
         "verifying_session": "Verificando sessão..."
       },
       "ai_generator": {
-        "label": "✨ Assistente de IA",
+        "label": "Assistente de IA",
+        "close": "Fechar",
+        "write": "Escrever com IA",
+        "stylizing": "Estilizando...",
+        "stylize": "Estilizar com IA",
         "placeholder": "Insira o prompt para a IA...",
         "button": "Gerar",
         "save": "Salvar",
@@ -243,7 +247,27 @@
     "useProjects": {},
     "useServices": {},
     "useEducations": {},
-    "useBlogPosts": {}
+    "use_blog_posts": {
+      "messages": {
+        "delete_success": "Post excluído com sucesso",
+        "delete_error": "Ocorreu um erro ao excluir o post",
+        "slug_in_use": "Este slug já está em uso",
+        "update_success": "Post atualizado com sucesso",
+        "create_success": "Post criado com sucesso",
+        "save_error": "Ocorreu um erro ao salvar o post",
+        "generate_success": "Conteúdo gerado com sucesso",
+        "generate_ai_fallback_error": "Falha ao gerar conteúdo com IA",
+        "generate_error": "Ocorreu um erro ao gerar o conteúdo",
+        "stylize_no_content": "Não há conteúdo para estilizar.",
+        "stylize_success": "Conteúdo estilizado com sucesso!",
+        "stylize_ai_fallback_error": "Falha ao estilizar conteúdo com IA",
+        "stylize_error": "Ocorreu um erro ao estilizar o conteúdo",
+        "toc_no_content": "Gere o conteúdo primeiro!",
+        "toc_success": "Sumário gerado com sucesso!",
+        "toc_insufficient_headings": "O texto precisa ter pelo menos 3 subtítulos para gerar um sumário.",
+        "toc_error": "Ocorreu um erro ao gerar o sumário."
+      }
+    }
   },
   "forms": {
     "projects": {
@@ -336,8 +360,11 @@
     "blog_posts": {
       "labels": {
         "title": "Título do Post",
+        "toc_label": "Neste artigo:",
         "status": "Status",
         "content": "Conteúdo",
+        "tooltip": "Inserir Imagem (Upload)",
+        "generate_toc": "Gerar Lista de Conteúdo (Sumario)",
         "language": "Idioma",
         "excerpt": "Descrição Curta",
         "slug": "Slug da URL",

@@ -4,10 +4,10 @@ import { type UseFormRegister, type FieldErrors } from 'react-hook-form';
 import type { AIProvider } from '@/typings/AiProvider';
 
 import SaveButton from '@/components/Buttons/SaveButton';
-import FormError from '../FormError';
+import FormError from '@/components/FormError';
 import Input from '@/components/Input';
 import Select from '@/components/Select';
-import IconWrapper from '../IconWrapper';
+import IconWrapper from '@/components/IconWrapper';
 
 interface AiProviderFormProps {
   register: UseFormRegister<AIProvider>;
