@@ -241,12 +241,61 @@
     }
   },
   "hooks": {
-    "useSettings": {},
-    "useProfile": {},
+    "use_ai_providers": {
+      "messages": {
+        "confirm_delete": "Tem certeza que deseja excluir?",
+        "delete_success": "Provedor de IA excluído com sucesso",
+        "delete_error": "Ocorreu um erro ao excluir o provedor de IA",
+        "update_success": "Provedor de IA atualizado com sucesso",
+        "create_success": "Provedor de IA criado com sucesso",
+        "save_error": "Ocorreu um erro ao salvar o provedor de IA"
+      }
+    },
+    "use_settings": {
+      "messages": {
+        "update_success": "Configurações atualizadas com sucesso",
+        "update_error": "Ocorreu um erro ao atualizar as configurações"
+      }
+    },
+    "use_profile": {
+      "messages": {
+        "update_profile_success": "Perfil atualizado com sucesso",
+        "update_profile_error": "Ocorreu um erro ao atualizar o perfil",
+        "update_password_success": "Senha atualizada com sucesso",
+        "update_password_error": "Ocorreu um erro ao atualizar a senha"
+      }
+    },
     "useImagePreview": {},
-    "useProjects": {},
-    "useServices": {},
-    "useEducations": {},
+    "use_projects": {
+      "messages": {
+        "confirm_delete": "Tem certeza que deseja apagar este projeto?",
+        "delete_success": "Projeto excluído com sucesso",
+        "delete_error": "Ocorreu um erro ao excluir o projeto",
+        "update_success": "Projeto atualizado com sucesso",
+        "create_success": "Projeto criado com sucesso",
+        "save_error": "Ocorreu um erro ao salvar o projeto"
+      }
+    },
+    "use_services": {
+      "messages": {
+        "confirm_delete": "Tem certeza que deseja excluir este serviço?",
+        "delete_success": "Serviço excluído com sucesso",
+        "delete_error": "Ocorreu um erro ao excluir o serviço",
+        "update_success": "Serviço atualizado com sucesso",
+        "create_success": "Serviço criado com sucesso",
+        "save_error": "Ocorreu um erro ao salvar o serviço"
+      }
+    },
+    "use_educations": {
+      "messages": {
+        "confirm_delete": "Tem certeza que deseja apagar?",
+        "delete_success": "Formação excluída com sucesso",
+        "delete_error": "Ocorreu um erro ao excluir a formação",
+        "update_success": "Formação atualizada com sucesso",
+        "create_success": "Formação criada com sucesso",
+        "save_error": "Ocorreu um erro ao salvar a formação"
+      }
+    },
     "use_blog_posts": {
       "messages": {
         "delete_success": "Post excluído com sucesso",

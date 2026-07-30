@@ -176,7 +176,7 @@ describe('useEducations hook', () => {
     await act(async () => {
       await result.current.deleteEducation('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir a formação');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_educations.messages.delete_error');
   });
 
   it('should handle delete education error with message property', async () => {
@@ -186,7 +186,7 @@ describe('useEducations hook', () => {
     await act(async () => {
       await result.current.deleteEducation('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir a formação');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_educations.messages.delete_error');
   });
 
   it('should handle delete education error with no property', async () => {
@@ -196,7 +196,7 @@ describe('useEducations hook', () => {
     await act(async () => {
       await result.current.deleteEducation('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir a formação');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_educations.messages.delete_error');
   });
 
   it('should reject submit if no image is present', async () => {

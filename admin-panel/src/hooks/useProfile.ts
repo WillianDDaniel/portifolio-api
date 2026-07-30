@@ -76,13 +76,13 @@ export function useProfile() {
       setSuccessProfile(true);
       setSelectedFile(null);
 
-      toast.success('Perfil atualizado com sucesso');
+      toast.success(t('hooks.use_profile.messages.update_profile_success', { defaultValue: 'Profile updated successfully' }));
     } catch (error) {
       const err = error as ApiError;
       const errorKey = err.error || err.message;
-      setGlobalErrorProfile(errorKey ? t(errorKey) : t('api.error.unknown'));
+      setGlobalErrorProfile(errorKey ? t(errorKey) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
 
-      toast.error('Ocorreu um erro ao atualizar o perfil');
+      toast.error(t('hooks.use_profile.messages.update_profile_error', { defaultValue: 'Error updating profile' }));
     }
   };
 
@@ -99,13 +99,13 @@ export function useProfile() {
       setSuccessPassword(true);
       passwordForm.reset();
 
-      toast.success('Senha atualizada com sucesso');
+      toast.success(t('hooks.use_profile.messages.update_password_success', { defaultValue: 'Password updated successfully' }));
     } catch (error) {
       const err = error as ApiError;
       const errorKey = err.error || err.message;
-      setGlobalErrorPassword(errorKey ? t(errorKey) : t('api.error.unknown'));
+      setGlobalErrorPassword(errorKey ? t(errorKey) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
 
-      toast.error('Ocorreu um erro ao atualizar a senha');
+      toast.error(t('hooks.use_profile.messages.update_password_error', { defaultValue: 'Error updating password' }));
     }
   };
 

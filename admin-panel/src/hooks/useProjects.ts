@@ -62,7 +62,7 @@ export function useProjects(options?: { fetchList?: boolean; editId?: string }) 
     } catch (error) {
       const err = error as ApiError;
       const errorKey = err.error || err.message;
-      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown'));
+      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export function useProjects(options?: { fetchList?: boolean; editId?: string }) 
     } catch (error) {
       const err = error as ApiError;
       const errorKey = err.error || err.message;
-      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown'));
+      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
     } finally {
       setLoading(false);
     }
@@ -106,17 +106,17 @@ export function useProjects(options?: { fetchList?: boolean; editId?: string }) 
   }, [options?.fetchList, options?.editId, loadProjects, loadProjectForEdit]);
 
   const deleteProject = async (id: string) => {
-    if (!window.confirm(t('projects.list.confirm_delete', { defaultValue: 'Tem certeza que deseja apagar este projeto?' }))) return;
+    if (!window.confirm(t('hooks.use_projects.messages.confirm_delete', { defaultValue: 'Are you sure you want to delete this project?' }))) return;
 
     try {
       await ProjectService.delete(id);
       setProjects(prev => prev.filter(p => p.id !== id));
 
-      toast.success('Projeto excluido com sucesso');
+      toast.success(t('hooks.use_projects.messages.delete_success', { defaultValue: 'Project deleted successfully' }));
     } catch (error) {
       const err = error as ApiError;
       console.log(err);
-      toast.error('Ocorreu um erro ao excluir o projeto');
+      toast.error(t('hooks.use_projects.messages.delete_error', { defaultValue: 'Error deleting project' }));
     }
   };
 
@@ -135,10 +135,10 @@ export function useProjects(options?: { fetchList?: boolean; editId?: string }) 
 
       if (id) {
         await ProjectService.update(id, payload);
-        toast.success('Projeto atualizado com sucesso');
+        toast.success(t('hooks.use_projects.messages.update_success', { defaultValue: 'Project updated successfully' }));
       } else {
         await ProjectService.create(payload);
-        toast.success('Projeto criado com sucesso');
+        toast.success(t('hooks.use_projects.messages.create_success', { defaultValue: 'Project created successfully' }));
       }
 
       setSelectedFile(null);
@@ -147,9 +147,9 @@ export function useProjects(options?: { fetchList?: boolean; editId?: string }) 
       const err = error as ApiError;
 
       const errorKey = err.error || err.message;
-      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown'));
+      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
 
-      toast.error('Ocorreu um erro ao criar o projeto');
+      toast.error(t('hooks.use_projects.messages.save_error', { defaultValue: 'Error saving project' }));
     }
   };
 

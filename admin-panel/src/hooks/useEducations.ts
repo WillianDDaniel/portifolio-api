@@ -116,16 +116,16 @@ export function useEducations(options?: { fetchList?: boolean; editId?: string }
   }, [options?.fetchList, options?.editId, loadEducations, loadEducationForEdit]);
 
   const deleteEducation = async (id: string) => {
-    if (!window.confirm(t('educations.list.confirm_delete', { defaultValue: 'Tem certeza que deseja apagar?' }))) return;
+    if (!window.confirm(t('hooks.use_educations.messages.confirm_delete', { defaultValue: 'Are you sure you want to delete this education?' }))) return;
 
     try {
       await EducationService.delete(id);
       setEducations(prev => prev.filter(e => e.id !== id));
-      toast.success('Formação excluida com sucesso');
+      toast.success(t('hooks.use_educations.messages.delete_success', { defaultValue: 'Education deleted successfully' }));
     } catch (error) {
       const err = error as ApiError;
       console.error(err);
-      toast.error('Ocorreu um erro ao excluir a formação');
+      toast.error(t('hooks.use_educations.messages.delete_error', { defaultValue: 'Error deleting education' }));
     }
   };
 
@@ -154,10 +154,10 @@ export function useEducations(options?: { fetchList?: boolean; editId?: string }
 
       if (id) {
         await EducationService.update(id, payload);
-        toast.success('Formação atualizada com sucesso');
+        toast.success(t('hooks.use_educations.messages.update_success', { defaultValue: 'Education updated successfully' }));
       } else {
         await EducationService.create(payload);
-        toast.success('Formação criada com sucesso');
+        toast.success(t('hooks.use_educations.messages.create_success', { defaultValue: 'Education created successfully' }));
       }
 
       setSelectedFile(null);
@@ -166,7 +166,7 @@ export function useEducations(options?: { fetchList?: boolean; editId?: string }
       const err = error as ApiError;
       const errorKey = err.error || err.message;
       setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown'));
-      toast.error('Ocorreu um erro ao salvar a formação');
+      toast.error(t('hooks.use_educations.messages.save_error', { defaultValue: 'Error saving education' }));
     }
   };
 

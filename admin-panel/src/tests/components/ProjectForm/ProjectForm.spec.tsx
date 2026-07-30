@@ -85,15 +85,18 @@ describe('ProjectForm Component', () => {
     vi.clearAllMocks();
   });
 
-  it('should render the form and its elements correctly', () => {
+  it('should render the form and its elements correctly', async () => {
     render(<ProjectForm {...mockProps} />);
 
-    expect(screen.getByText('Content & Translations')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Save Project' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '+ Add Language' })).toBeInTheDocument();
+
+    expect(await screen.findByText('Content & Translations')).toBeInTheDocument();
+
     expect(screen.getByTestId('mock-image-selector')).toBeInTheDocument();
     expect(screen.getByTestId('mock-input-liveUrl')).toBeInTheDocument();
     expect(screen.getByTestId('mock-input-repoUrl')).toBeInTheDocument();
+
+    expect(screen.getByRole('button', { name: 'Save Project' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '+ Add Language' })).toBeInTheDocument();
   });
 
   it('should display an error message if globalError prop is provided', () => {

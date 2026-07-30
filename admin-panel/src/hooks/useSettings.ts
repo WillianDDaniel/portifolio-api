@@ -69,7 +69,7 @@ export function useSettings(options?: { fetchOnMount?: boolean }) {
       return parsedData;
     } catch (error) {
       const err = error as ApiError;
-      setGlobalError(err.error ? t(err.error) : t('api.error.unknown'));
+      setGlobalError(err.error ? t(err.error) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
       return null;
     } finally {
       setLoading(false);
@@ -126,20 +126,20 @@ export function useSettings(options?: { fetchOnMount?: boolean }) {
       setImagePreview(settedSettings.logoUrl ?? null);
 
       if (onSuccess) onSuccess(updatedSettings);
-      toast.success('Configurações atualizadas com sucesso');
+      toast.success(t('hooks.use_settings.messages.update_success', { defaultValue: 'Settings updated successfully' }));
 
     } catch (error) {
       const err = error as ApiError;
       setGlobalError(err.message || t('settings.error.update'));
 
-      toast.error('Ocorreu um erro ao atualizar as configurações');
+      toast.error(t('hooks.use_settings.messages.update_error', { defaultValue: 'Error updating settings' }));
     }
   };
 
   const updateSettings = (onSuccess?: (updated: Settings) => void) =>
     handleSubmit(
       (data) => processFormSubmit(data, onSuccess),
-      (validationErrors) => console.error('❌ Zod barrou o formulário de configurações:', validationErrors)
+      (validationErrors) => console.error('❌ Zod barrou o formulário de configurações:', validationErrors)
     );
 
   return {

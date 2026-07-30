@@ -161,7 +161,7 @@ describe('useServices hook', () => {
     await act(async () => {
       await result.current.deleteService('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir o serviço');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_services.messages.delete_error');
   });
 
   it('should handle delete service error with no property', async () => {
@@ -171,7 +171,7 @@ describe('useServices hook', () => {
     await act(async () => {
       await result.current.deleteService('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir o serviço');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_services.messages.delete_error');
   });
 
   it('should submit create with minimal payload', async () => {

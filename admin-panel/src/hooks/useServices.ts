@@ -61,7 +61,7 @@ export function useServices(options?: { fetchList?: boolean; editId?: string }) 
       setServices(data);
     } catch (error) {
       const err = error as ApiError;
-      setGlobalError(err.error ? t(err.error) : t('api.error.unknown'));
+      setGlobalError(err.error ? t(err.error) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export function useServices(options?: { fetchList?: boolean; editId?: string }) 
       setImagePreview(data.imageUrl || null);
     } catch (error) {
       const err = error as ApiError;
-      setGlobalError(err.error ? t(err.error) : t('api.error.unknown'));
+      setGlobalError(err.error ? t(err.error) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
     } finally {
       setLoading(false);
     }
@@ -103,17 +103,17 @@ export function useServices(options?: { fetchList?: boolean; editId?: string }) 
   }, [options?.fetchList, options?.editId, loadServices, loadServiceForEdit]);
 
   const deleteService = async (id: string) => {
-    if (!window.confirm(t('services.action.confirm_delete'))) return;
+    if (!window.confirm(t('hooks.use_services.messages.confirm_delete', { defaultValue: 'Are you sure you want to delete this service?' }))) return;
     try {
       await ServiceService.delete(id);
       setServices(prev => prev.filter(s => s.id !== id));
 
-      toast.success('Serviço excluido com sucesso');
+      toast.success(t('hooks.use_services.messages.delete_success', { defaultValue: 'Service deleted successfully' }));
     } catch (error) {
       const err = error as ApiError;
       console.error(err);
 
-      toast.error('Ocorreu um erro ao excluir o serviço');
+      toast.error(t('hooks.use_services.messages.delete_error', { defaultValue: 'Error deleting service' }));
     }
   };
 
@@ -134,10 +134,10 @@ export function useServices(options?: { fetchList?: boolean; editId?: string }) 
 
       if (id) {
         await ServiceService.update(id, payload);
-        toast.success('Serviço atualizado com sucesso');
+        toast.success(t('hooks.use_services.messages.update_success', { defaultValue: 'Service updated successfully' }));
       } else {
         await ServiceService.create(payload);
-        toast.success('Serviço criado com sucesso');
+        toast.success(t('hooks.use_services.messages.create_success', { defaultValue: 'Service created successfully' }));
       }
 
       setSelectedFile(null);
@@ -145,9 +145,9 @@ export function useServices(options?: { fetchList?: boolean; editId?: string }) 
     } catch (error) {
       const err = error as ApiError;
       const errorKey = err.error;
-      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown'));
+      setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown', { defaultValue: 'Unknown error' }));
 
-      toast.error('Ocorreu um erro ao criar o serviço');
+      toast.error(t('hooks.use_services.messages.save_error', { defaultValue: 'Error saving service' }));
     }
   };
 

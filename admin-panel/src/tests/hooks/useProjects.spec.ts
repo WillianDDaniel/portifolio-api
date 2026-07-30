@@ -176,7 +176,7 @@ describe('useProjects hook', () => {
     await act(async () => {
       await result.current.deleteProject('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir o projeto');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_projects.messages.delete_error');
   });
 
   it('should handle delete project error with message property', async () => {
@@ -186,7 +186,7 @@ describe('useProjects hook', () => {
     await act(async () => {
       await result.current.deleteProject('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir o projeto');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_projects.messages.delete_error');
   });
 
   it('should handle delete project error with no property', async () => {
@@ -196,7 +196,7 @@ describe('useProjects hook', () => {
     await act(async () => {
       await result.current.deleteProject('123');
     });
-    expect(toast.error).toHaveBeenCalledWith('Ocorreu um erro ao excluir o projeto');
+    expect(toast.error).toHaveBeenCalledWith('hooks.use_projects.messages.delete_error');
   });
 
   it('should submit create with minimal payload', async () => {

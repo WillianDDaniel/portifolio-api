@@ -36,17 +36,17 @@ export function useAiProviders() {
 
   const deleteAiProvider = async (id?: string, onSuccess?: () => void) => {
     if (!id) return;
-    if (!window.confirm(t('ai_providers.action.confirm_delete', { defaultValue: 'Tem certeza que deseja excluir?' }))) return;
+    if (!window.confirm(t('hooks.use_ai_providers.messages.confirm_delete', { defaultValue: 'Tem certeza que deseja excluir?' }))) return;
 
     setLoading(true);
     try {
       await AiProviderService.delete(id);
       if (onSuccess) onSuccess();
-      toast.success('Provedor de IA excluido com sucesso');
+      toast.success(t('hooks.use_ai_providers.messages.delete_success', { defaultValue: 'Provedor de IA excluido com sucesso' }));
     } catch (error) {
       const err = error as ApiError;
       console.error(err);
-      toast.error('Ocorreu um erro ao excluir o provedor de IA');
+      toast.error(t('hooks.use_ai_providers.messages.delete_error', { defaultValue: 'Ocorreu um erro ao excluir o provedor de IA' }));
     } finally {
       setLoading(false);
     }
@@ -59,10 +59,10 @@ export function useAiProviders() {
 
       if (id) {
         await AiProviderService.update(id, payload);
-        toast.success('Provedor de IA atualizado com sucesso');
+        toast.success(t('hooks.use_ai_providers.messages.update_success', { defaultValue: 'Provedor de IA atualizado com sucesso' }));
       } else {
         await AiProviderService.create(payload);
-        toast.success('Provedor de IA criado com sucesso');
+        toast.success(t('hooks.use_ai_providers.messages.create_success', { defaultValue: 'Provedor de IA criado com sucesso' }));
       }
 
       reset(initialForm);
@@ -71,7 +71,7 @@ export function useAiProviders() {
       const err = error as ApiError;
       const errorKey = err.error;
       setGlobalError(errorKey ? t(errorKey) : t('api.error.unknown', { defaultValue: 'Erro desconhecido' }));
-      toast.error('Ocorreu um erro ao salvar o provedor de IA');
+      toast.error(t('hooks.use_ai_providers.messages.save_error', { defaultValue: 'Ocorreu um erro ao salvar o provedor de IA' }));
     }
   };
 
