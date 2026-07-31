@@ -12,8 +12,12 @@
         "verifying_session": "Verificando sesión..."
       },
       "ai_generator": {
-        "label": "✨ Asistente de IA",
-        "placeholder": "Ingrese el prompt para la IA...",
+        "label": "Asistente de IA",
+        "close": "Cerrar",
+        "write": "Escribir con IA",
+        "stylizing": "Estilizando...",
+        "stylize": "Estilizar con IA",
+        "placeholder": "Introduce el prompt para la IA...",
         "button": "Generar",
         "save": "Guardar",
         "saving": "Guardando..."
@@ -237,13 +241,82 @@
     }
   },
   "hooks": {
-    "useSettings": {},
-    "useProfile": {},
+    "use_ai_providers": {
+      "messages": {
+        "confirm_delete": "¿Estás seguro de que deseas eliminar?",
+        "delete_success": "Proveedor de IA eliminado con éxito",
+        "delete_error": "Ocurrió un error al eliminar el proveedor de IA",
+        "update_success": "Proveedor de IA actualizado con éxito",
+        "create_success": "Proveedor de IA creado con éxito",
+        "save_error": "Ocurrió un error al guardar el proveedor de IA"
+      }
+    },
+    "use_settings": {
+      "messages": {
+        "update_success": "Configuración actualizada con éxito",
+        "update_error": "Ocurrió un error al actualizar la configuración"
+      }
+    },
+    "use_profile": {
+      "messages": {
+        "update_profile_success": "Perfil actualizado con éxito",
+        "update_profile_error": "Ocurrió un error al actualizar el perfil",
+        "update_password_success": "Contraseña actualizada con éxito",
+        "update_password_error": "Ocurrió un error al actualizar la contraseña"
+      }
+    },
     "useImagePreview": {},
-    "useProjects": {},
-    "useServices": {},
-    "useEducations": {},
-    "useBlogPosts": {}
+    "use_projects": {
+      "messages": {
+        "confirm_delete": "¿Estás seguro de que deseas eliminar este proyecto?",
+        "delete_success": "Proyecto eliminado con éxito",
+        "delete_error": "Ocurrió un error al eliminar el proyecto",
+        "update_success": "Proyecto actualizado con éxito",
+        "create_success": "Proyecto creado con éxito",
+        "save_error": "Ocurrió un error al guardar el proyecto"
+      }
+    },
+    "use_services": {
+      "messages": {
+        "confirm_delete": "¿Estás seguro de que deseas eliminar este servicio?",
+        "delete_success": "Servicio eliminado con éxito",
+        "delete_error": "Ocurrió un error al eliminar el servicio",
+        "update_success": "Servicio actualizado con éxito",
+        "create_success": "Servicio creado con éxito",
+        "save_error": "Ocurrió un error al guardar el servicio"
+      }
+    },
+    "use_educations": {
+      "messages": {
+        "confirm_delete": "¿Estás seguro de que deseas eliminar?",
+        "delete_success": "Formación eliminada con éxito",
+        "delete_error": "Ocurrió un error al eliminar la formación",
+        "update_success": "Formación actualizada con éxito",
+        "create_success": "Formación creada con éxito",
+        "save_error": "Ocurrió un error al guardar la formación"
+      }
+    },
+    "use_blog_posts": {
+      "messages": {
+        "delete_success": "Publicación eliminada con éxito",
+        "delete_error": "Ocurrió un error al eliminar la publicación",
+        "slug_in_use": "Este slug ya está en uso",
+        "update_success": "Publicación actualizada con éxito",
+        "create_success": "Publicación creada con éxito",
+        "save_error": "Ocurrió un error al guardar la publicación",
+        "generate_success": "Contenido generado con éxito",
+        "generate_ai_fallback_error": "Error al generar contenido con IA",
+        "generate_error": "Ocurrió un error al generar el contenido",
+        "stylize_no_content": "No hay contenido para estilizar.",
+        "stylize_success": "¡Contenido estilizado con éxito!",
+        "stylize_ai_fallback_error": "Error al estilizar contenido con IA",
+        "stylize_error": "Ocurrió un error al estilizar el contenido",
+        "toc_no_content": "¡Genera el contenido primero!",
+        "toc_success": "¡Tabla de contenidos generada con éxito!",
+        "toc_insufficient_headings": "El texto debe tener al menos 3 subtítulos para generar una tabla de contenidos.",
+        "toc_error": "Ocurrió un error al generar la tabla de contenidos."
+      }
+    }
   },
   "forms": {
     "projects": {
@@ -338,6 +411,9 @@
         "title": "Título del Post",
         "status": "Estado",
         "content": "Contenido",
+        "toc_label": "En este artículos:",
+        "tooltip": "Insertar Imagen (Upload)",
+        "generate_toc": "Generar Lista de Contenido (Sumario)",
         "language": "Idioma",
         "excerpt": "Descripción Corta",
         "slug": "Slug de la URL",
@@ -451,6 +527,91 @@
         "update_password": "Actualizar Contraseña"
       },
       "errors": {}
+    }
+  },
+  "errors": {
+    "blog_posts": {
+      "image_url": "La URL de la imagen de portada es inválida.",
+      "language": "El idioma debe tener al menos 2 caracteres.",
+      "slug": "El slug debe tener al menos 3 caracteres.",
+      "title": "El título debe tener al menos 3 caracteres.",
+      "excerpt": "El resumen debe tener al menos 10 caracteres.",
+      "content": "El contenido debe tener al menos 10 caracteres.",
+      "translations_required": "Es necesario proporcionar al menos una traducción.",
+      "invalid_provider_id": "El ID del proveedor debe ser un UUID válido.",
+      "language_invalid": "El idioma proporcionado es inválido.",
+      "title_required": "El título es obligatorio y debe tener al menos 3 caracteres."
+    },
+    "cloudinary": {
+      "invalid_folder": "La carpeta seleccionada es inválida.",
+      "invalid_identifier": "El identificador es obligatorio."
+    },
+    "contact": {
+      "name": "El nombre debe tener al menos 3 caracteres.",
+      "company": "El nombre de la empresa debe tener al menos 3 caracteres.",
+      "email": "El correo electrónico proporcionado es inválido.",
+      "whatsapp": "El WhatsApp debe tener al menos 10 caracteres.",
+      "message": "El mensaje debe tener al menos 10 caracteres.",
+      "email_or_whatsapp": "Es necesario proporcionar un correo electrónico o WhatsApp de contacto."
+    },
+    "educations": {
+      "language": "El idioma debe tener entre 2 y 4 caracteres.",
+      "name": "El nombre del curso/formación debe tener al menos 3 caracteres.",
+      "institution": "El nombre de la institución debe tener al menos 2 caracteres.",
+      "description": "La descripción debe tener al menos 10 caracteres.",
+      "start_date": "La fecha de inicio debe ser una fecha válida.",
+      "end_date": "La fecha de finalización debe ser una fecha válida.",
+      "type": "El tipo debe ser 'college', 'course', 'certification' o 'bootcamp'.",
+      "duration_hours": "La carga horaria debe ser un número entero positivo.",
+      "image_url": "La URL de la imagen es inválida.",
+      "certificate_url": "La URL del certificado es inválida.",
+      "status": "El estado debe tener al menos 2 caracteres.",
+      "translations_required": "Es necesario proporcionar al menos una traducción."
+    },
+    "github": {
+      "repo_url": "La URL del repositorio de GitHub es inválida."
+    },
+    "login": {
+      "email": "El correo electrónico proporcionado es inválido.",
+      "password": "La contraseña debe tener al menos 6 caracteres."
+    },
+    "profile": {
+      "password_mismatch": "La confirmación de la contraseña no coincide con la nueva contraseña."
+    },
+    "projects": {
+      "language": "El idioma debe tener al menos 2 caracteres.",
+      "title": "El título del proyecto debe tener al menos 3 caracteres.",
+      "description": "La descripción debe tener al menos 10 caracteres.",
+      "image_url": "La URL de la imagen del proyecto es inválida.",
+      "live_url": "La URL de visualización (live) es inválida.",
+      "repo_url": "La URL del repositorio es inválida.",
+      "translations_required": "Es necesario proporcionar al menos una traducción."
+    },
+    "services": {
+      "link": "El enlace del servicio debe ser una URL válida.",
+      "image_url": "La URL de la imagen del servicio es inválida.",
+      "language": "El idioma debe tener al menos 2 caracteres.",
+      "title": "El título del servicio debe tener al menos 3 caracteres.",
+      "description": "La descripción del servicio debe tener al menos 10 caracteres.",
+      "translations_required": "Es necesario proporcionar al menos una traducción."
+    },
+    "settings": {
+      "ai_provider_name_min": "El nombre del proveedor de IA debe tener al menos 3 caracteres.",
+      "ai_provider": "Seleccione un proveedor de IA válido (openai, groq o gemini).",
+      "ai_provider_key_required": "La clave de API es obligatoria para un nuevo proveedor de IA.",
+      "theme": "El tema debe ser 'light', 'dark' o 'system'.",
+      "panel_language": "El idioma del panel debe tener al menos 2 caracteres.",
+      "site_url": "La URL del sitio debe ser una URL válida.",
+      "public_email": "El correo electrónico público debe ser un correo electrónico válido.",
+      "logo_url": "La URL del logo debe ser una URL válida."
+    },
+    "users": {
+      "name": "El nombre debe tener al menos 2 caracteres.",
+      "email": "El correo electrónico proporcionado es inválido.",
+      "avatar_url": "La URL del avatar es inválida.",
+      "empty_payload": "Al menos un campo debe ser proporcionado para la actualización.",
+      "old_password": "La contraseña actual debe tener al menos 6 caracteres.",
+      "new_password": "La nueva contraseña debe tener al menos 6 caracteres."
     }
   }
 }
