@@ -19,8 +19,13 @@ import toast from 'react-hot-toast';
 
 const initialForm: NewBlogPost = {
   coverImageUrl: '',
-  isPublished: false,
-  translations: [{ language: 'pt', slug: '', title: '', excerpt: '', content: '' }]
+  ogImageUrl: '',
+  status: 'draft',
+  isFeatured: false,
+  publishedAt: null,
+  categoryIds: [],
+  tagIds: [],
+  translations: [{ language: 'pt', slug: '', title: '', excerpt: '', content: '', metaTitle: '', metaDescription: '' }]
 };
 
 export function useBlogPosts(options?: { fetchList?: boolean; editId?: string }) {
@@ -54,7 +59,6 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     setValue,
     setError,
     clearErrors,
-
     formState: { errors, isSubmitting }
   } = useForm<NewBlogPost>({
     resolver: zodResolver(blogPostSchema),
@@ -90,13 +94,20 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
           slug: tData.slug,
           title: tData.title,
           excerpt: tData.excerpt,
-          content: tData.content
+          content: tData.content,
+          metaTitle: tData.metaTitle || '',
+          metaDescription: tData.metaDescription || ''
         }))
         : initialForm.translations;
 
       reset({
         coverImageUrl: data.coverImageUrl ?? '',
-        isPublished: data.isPublished ?? false,
+        ogImageUrl: data.ogImageUrl ?? '',
+        status: data.status ?? 'draft',
+        isFeatured: data.isFeatured ?? false,
+        publishedAt: data.publishedAt ?? null,
+        categoryIds: data.categories?.map(c => c.category.id) || [],
+        tagIds: data.tags?.map(t => t.tag.id) || [],
         translations: cleanTranslations,
       });
 
@@ -150,7 +161,6 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
       if (selectedFile) {
         // eslint-disable-next-line react-hooks/purity
         const fileId = id || Date.now().toString();
-
         finalImageUrl = await UploadService.uploadImage(selectedFile, 'blog-posts', `post-${fileId}`);
       }
 
@@ -376,24 +386,20 @@ export function useBlogPosts(options?: { fetchList?: boolean; editId?: string })
     errors,
     isSubmitting,
     fields,
-    appendTranslation: () => append({ language: 'en', slug: '', title: '', excerpt: '', content: '' }),
+    appendTranslation: () => append({ language: 'en', slug: '', title: '', excerpt: '', content: '', metaTitle: '', metaDescription: '' }),
     removeTranslation: remove,
 
     imagePreview,
     handleFileChange,
 
-    // AI Generation
     isGenerating,
     generateAIContent,
 
-    // AI Stylization
     isStylizing,
     stylizeAIContent,
 
-    // Table of Contents
     generateTableOfContents,
 
-    // Utils
     checkSlugAvailability,
     handleSlugDebounce
   };

@@ -110,15 +110,44 @@ export default function BlogPostTranslationItem({
         <div className="md:col-span-12">
           <Textarea
             id={`translations-${index}-excerpt`}
-            label={t('forms.blog_posts.labels.excerpt', { defaultValue: 'Short Summary (SEO)' })}
+            label={t('forms.blog_posts.labels.excerpt', { defaultValue: 'Short Summary' })}
             {...register(`translations.${index}.excerpt` as const)}
             rows={3}
-            placeholder={t('forms.blog_posts.placeholders.excerpt', { defaultValue: 'A brief description of this post for list views and SEO...' })}
+            placeholder={t('forms.blog_posts.placeholders.excerpt', { defaultValue: 'A brief description of this post for list views...' })}
           />
           <FormError error={!!errors?.translations?.[index]?.excerpt} message={t(errors?.translations?.[index]?.excerpt?.message as string)} />
         </div>
 
-        <div className="md:col-span-12 mt-4 flex flex-col">
+        <div className="md:col-span-12 border-t border-gray-100 dark:border-zinc-700 pt-4 mt-2">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-zinc-300 mb-4 flex items-center gap-2">
+            🔍 {t('forms.blog_posts.sections.seo', { defaultValue: 'SEO Metadata' })}
+          </h4>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <Input
+                id={`translations-${index}-metaTitle`}
+                label={t('forms.blog_posts.labels.meta_title', { defaultValue: 'Meta Title' })}
+                placeholder={t('forms.blog_posts.placeholders.meta_title', { defaultValue: 'SEO Title (max 60 chars)' })}
+                {...register(`translations.${index}.metaTitle` as const)}
+              />
+              <FormError error={!!errors?.translations?.[index]?.metaTitle} message={t(errors?.translations?.[index]?.metaTitle?.message as string)} />
+            </div>
+
+            <div className="md:col-span-2">
+              <Textarea
+                id={`translations-${index}-metaDescription`}
+                label={t('forms.blog_posts.labels.meta_description', { defaultValue: 'Meta Description' })}
+                {...register(`translations.${index}.metaDescription` as const)}
+                rows={2}
+                placeholder={t('forms.blog_posts.placeholders.meta_description', { defaultValue: 'SEO Description (max 160 chars)' })}
+              />
+              <FormError error={!!errors?.translations?.[index]?.metaDescription} message={t(errors?.translations?.[index]?.metaDescription?.message as string)} />
+            </div>
+          </div>
+        </div>
+
+        <div className="md:col-span-12 mt-4 flex flex-col border-t border-gray-100 dark:border-zinc-700 pt-6">
           <AiEditorHeader
             index={index}
             aiPrompt={aiPrompt}

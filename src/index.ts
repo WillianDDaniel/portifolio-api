@@ -14,7 +14,11 @@ import githubRoutes from './routes/github.routes.js';
 import serviceRoutes from './routes/services.routes.js';
 import contactRoutes from './routes/contact.routes.js';
 import educationsRoutes from './routes/educations.routes.js';
+
 import blogPostRoutes from './routes/blog-posts.routes.js';
+import tagsRoutes from './routes/tags.routes.js';
+import categoriesRoutes from './routes/categories.routes.js';
+
 import iaProvidersRoutes from './routes/ai-providers.routes.js';
 
 type Variables = {
@@ -44,6 +48,10 @@ app.route('/api/contact', contactRoutes);
 app.route('/api/educations', educationsRoutes);
 app.route('/api/services', serviceRoutes);
 app.route('/api/blog-posts', blogPostRoutes);
+
+app.route('/api/tags', tagsRoutes);
+app.route('/api/categories', categoriesRoutes);
+
 app.route('/api/ai-providers', iaProvidersRoutes);
 
 app.use('/*', serveStatic({

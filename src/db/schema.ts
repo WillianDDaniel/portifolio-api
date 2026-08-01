@@ -7,7 +7,9 @@ import {
   boolean,
   unique,
   jsonb,
-  date
+  date,
+  pgEnum,
+  primaryKey
 } from 'drizzle-orm/pg-core';
 
 import { relations } from 'drizzle-orm';
@@ -158,11 +160,22 @@ export const settings = pgTable('settings', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const postStatusEnum = pgEnum('post_status', ['draft', 'scheduled', 'published', 'archived']);
+
 export const blogPosts = pgTable('blog_posts', {
   id: uuid('id').defaultRandom().primaryKey(),
+
+  authorId: uuid('author_id')
+    .notNull()
+    .references(() => users.id),
+
   coverImageUrl: text('cover_image_url'),
-  isPublished: boolean('is_published').default(false).notNull(),
+  ogImageUrl: text('og_image_url'),
+
+  status: postStatusEnum('status').default('draft').notNull(),
   publishedAt: timestamp('published_at'),
+  isFeatured: boolean('is_featured').default(false).notNull(),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -172,19 +185,87 @@ export const blogPostTranslations = pgTable('blog_post_translations', {
   postId: uuid('post_id')
     .notNull()
     .references(() => blogPosts.id, { onDelete: 'cascade' }),
+
   language: text('language').notNull(),
   slug: text('slug').notNull(),
+
   title: text('title').notNull(),
   excerpt: text('excerpt').notNull(),
   content: text('content').notNull(),
+
+  metaTitle: text('meta_title'),
+  metaDescription: text('meta_description'),
+
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
   unqSlugLang: unique('unq_slug_lang').on(table.language, table.slug),
 }));
 
-export const blogPostRelations = relations(blogPosts, ({ many }) => ({
+export const categories = pgTable('categories', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const categoryTranslations = pgTable('category_translations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  categoryId: uuid('category_id').notNull().references(() => categories.id, { onDelete: 'cascade' }),
+  language: text('language').notNull(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull(),
+}, (table) => ({
+  unqCategorySlugLang: unique('unq_category_slug_lang').on(table.language, table.slug),
+}));
+
+export const tags = pgTable('tags', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const tagTranslations = pgTable('tag_translations', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  tagId: uuid('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+  language: text('language').notNull(),
+  name: text('name').notNull(),
+  slug: text('slug').notNull(),
+}, (table) => ({
+  unqTagSlugLang: unique('unq_tag_slug_lang').on(table.language, table.slug),
+}));
+
+export const blogPostsToCategories = pgTable('blog_posts_to_categories', {
+  postId: uuid('post_id')
+    .notNull()
+    .references(() => blogPosts.id, { onDelete: 'cascade' }),
+  categoryId: uuid('category_id')
+    .notNull()
+    .references(() => categories.id, { onDelete: 'cascade' }),
+}, (t) => [
+  primaryKey({ columns: [t.postId, t.categoryId] })
+]);
+
+export const blogPostsToTags = pgTable('blog_posts_to_tags', {
+  postId: uuid('post_id')
+    .notNull()
+    .references(() => blogPosts.id, { onDelete: 'cascade' }),
+  tagId: uuid('tag_id')
+    .notNull()
+    .references(() => tags.id, { onDelete: 'cascade' }),
+}, (t) => [
+  primaryKey({ columns: [t.postId, t.tagId] })
+]);
+
+export const usersRelations = relations(users, ({ many }) => ({
+  blogPosts: many(blogPosts),
+}));
+
+export const blogPostRelations = relations(blogPosts, ({ one, many }) => ({
+  author: one(users, {
+    fields: [blogPosts.authorId],
+    references: [users.id],
+  }),
   translations: many(blogPostTranslations),
+  categories: many(blogPostsToCategories),
+  tags: many(blogPostsToTags),
 }));
 
 export const blogPostTranslationRelations = relations(blogPostTranslations, ({ one }) => ({
@@ -193,6 +274,40 @@ export const blogPostTranslationRelations = relations(blogPostTranslations, ({ o
     references: [blogPosts.id],
   }),
 }));
+
+
+export const categoryRelations = relations(categories, ({ many }) => ({
+  translations: many(categoryTranslations),
+}));
+
+export const categoryTranslationRelations = relations(categoryTranslations, ({ one }) => ({
+  category: one(categories, {
+    fields: [categoryTranslations.categoryId],
+    references: [categories.id],
+  }),
+}));
+
+export const tagRelations = relations(tags, ({ many }) => ({
+  translations: many(tagTranslations),
+}));
+
+export const tagTranslationRelations = relations(tagTranslations, ({ one }) => ({
+  tag: one(tags, {
+    fields: [tagTranslations.tagId],
+    references: [tags.id],
+  }),
+}));
+
+export const blogPostsToCategoriesRelations = relations(blogPostsToCategories, ({ one }) => ({
+  post: one(blogPosts, { fields: [blogPostsToCategories.postId], references: [blogPosts.id] }),
+  category: one(categories, { fields: [blogPostsToCategories.categoryId], references: [categories.id] }),
+}));
+
+export const blogPostsToTagsRelations = relations(blogPostsToTags, ({ one }) => ({
+  post: one(blogPosts, { fields: [blogPostsToTags.postId], references: [blogPosts.id] }),
+  tag: one(tags, { fields: [blogPostsToTags.tagId], references: [tags.id] }),
+}));
+
 
 export const aiProviders = pgTable('ai_api_keys', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -220,3 +335,4 @@ export const aiProvidersRelations = relations(aiProviders, ({ one }) => ({
     references: [settings.id],
   }),
 }));
+

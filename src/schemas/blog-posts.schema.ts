@@ -6,7 +6,21 @@ export const blogPostSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  isPublished: z.boolean().default(false).optional(),
+  ogImageUrl: z.url({ error: 'errors.blog_posts.image_url' })
+    .startsWith('http', { error: 'errors.blog_posts.image_url' })
+    .optional()
+    .or(z.literal('')),
+
+  status: z.enum(['draft', 'scheduled', 'published', 'archived'] as const, {
+    message: 'errors.blog_posts.invalid_status'
+  }).default('draft').optional(),
+
+  publishedAt: z.string().datetime({ message: 'errors.blog_posts.invalid_date' }).optional().nullable(),
+
+  isFeatured: z.boolean().default(false).optional(),
+
+  categoryIds: z.array(z.uuid({ error: 'errors.blog_posts.invalid_category_id' })).optional(),
+  tagIds: z.array(z.uuid({ error: 'errors.blog_posts.invalid_tag_id' })).optional(),
 
   translations: z.array(z.object({
     language: z.string().min(2, { error: 'errors.blog_posts.language' }),
@@ -14,6 +28,9 @@ export const blogPostSchema = z.object({
     title: z.string().min(3, { error: 'errors.blog_posts.title' }),
     excerpt: z.string().min(10, { error: 'errors.blog_posts.excerpt' }),
     content: z.string().min(10, { error: 'errors.blog_posts.content' }),
+
+    metaTitle: z.string().optional().nullable(),
+    metaDescription: z.string().optional().nullable(),
   }).strict()).min(1, { error: 'errors.blog_posts.translations_required' }),
 }).strict();
 
@@ -24,7 +41,6 @@ export const generateBlogPostSchema = z.object({
   providerId: z.uuid({ message: 'errors.blog_posts.invalid_provider_id' }),
 
   postPartialData: z.object({
-
     language: z.enum(['pt', 'en', 'es'] as const, {
       message: 'errors.blog_posts.language_invalid'
     }).default('en'),

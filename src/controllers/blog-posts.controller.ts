@@ -1,8 +1,8 @@
 import { Context } from 'hono';
 import { toTextStream } from 'ai';
 
-import { AiService } from '../services/ai.service.js'
-import { BlogPrompts } from '../prompts/blog.prompts.js'
+import { AiService } from '../services/ai.service.js';
+import { BlogPrompts } from '../prompts/blog.prompts.js';
 import type { BlogPost, GenerateBlogPost } from '../schemas/blog-posts.schema.js';
 
 import { DEFAULT_MODELS } from '../constants/index.js';
@@ -25,7 +25,6 @@ export const getBlogPosts = async (c: Context) => {
   try {
     const posts = await findAllBlogPosts(true);
     return c.json(posts, 200);
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.list', message: error.message }, 500);
   }
@@ -42,7 +41,6 @@ export const getBlogPostBySlug = async (c: Context) => {
     }, 404);
 
     return c.json(post, 200);
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.get_by_slug', message: error.message }, 500);
   }
@@ -52,7 +50,6 @@ export const getAdminBlogPosts = async (c: Context) => {
   try {
     const posts = await findAllBlogPosts(false);
     return c.json(posts, 200);
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.list', message: error.message }, 500);
   }
@@ -69,7 +66,6 @@ export const getBlogPostById = async (c: Context) => {
     }, 404);
 
     return c.json(post, 200);
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.get_by_id', message: error.message }, 500);
   }
@@ -77,16 +73,24 @@ export const getBlogPostById = async (c: Context) => {
 
 export const createBlogPost = async (c: Context) => {
   try {
-
     const rawBody = await c.req.json<BlogPost>();
-    const { translations, ...postData } = rawBody;
+    const { translations, categoryIds, tagIds, ...postData } = rawBody;
+
+    const jwtPayload = c.get('jwtPayload');
+    const authorId = jwtPayload.id;
+
+    let finalPublishedAt = postData.publishedAt ? new Date(postData.publishedAt) : null;
+    if (postData.status === 'published' && !finalPublishedAt) {
+      finalPublishedAt = new Date();
+    }
 
     const newPostData = {
       ...postData,
-      publishedAt: postData.isPublished ? new Date() : null,
+      authorId,
+      publishedAt: finalPublishedAt,
     };
 
-    const newPost = await createBlogPostRecord(newPostData, translations);
+    const newPost = await createBlogPostRecord(newPostData, translations, categoryIds, tagIds);
 
     if (!newPost) {
       return c.json({
@@ -96,7 +100,6 @@ export const createBlogPost = async (c: Context) => {
     }
 
     return c.json(newPost, 201);
-
   } catch (error: any) {
     return c.json({
       error: 'blog_posts.error.create',
@@ -109,7 +112,8 @@ export const updateBlogPost = async (c: Context) => {
   const id = c.req.param('id');
 
   try {
-    const { translations, ...postData } = await c.req.json<BlogPost>();
+    const rawBody = await c.req.json<BlogPost>();
+    const { translations, categoryIds, tagIds, ...postData } = rawBody;
 
     const existingPost = await findBlogPostById(id);
 
@@ -119,18 +123,19 @@ export const updateBlogPost = async (c: Context) => {
 
     const updatePayload: any = { ...postData };
 
-    if (postData.isPublished === true && !existingPost.publishedAt) {
+    if (postData.publishedAt) {
+      updatePayload.publishedAt = new Date(postData.publishedAt);
+    } else if (postData.status === 'published' && !existingPost.publishedAt) {
       updatePayload.publishedAt = new Date();
     }
 
-    const updatedPost = await updateBlogPostRecord(id, updatePayload, translations);
+    const updatedPost = await updateBlogPostRecord(id, updatePayload, translations, categoryIds, tagIds);
 
     if (!updatedPost) return c.json({
       error: 'blog_posts.error.update', message: 'Blog post not updated'
     }, 422);
 
     return c.json(updatedPost, 200);
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.update', message: error.message }, 500);
   }
@@ -147,7 +152,6 @@ export const deleteBlogPost = async (c: Context) => {
     }, 422);
 
     return c.json(deletedPost, 200);
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.delete', message: error.message }, 500);
   }
@@ -193,7 +197,6 @@ export const generateBlogPost = async (c: Context) => {
         'Connection': 'keep-alive',
       },
     });
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.generate', message: error.message }, 500);
   }
@@ -207,7 +210,6 @@ export const checkSlug = async (c: Context) => {
     const exists = await checkSlugExists(lang, slug, excludeId);
 
     return c.json({ exists }, 200);
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.check_slug', message: error.message }, 500);
   }
@@ -264,7 +266,6 @@ export const stylizeBlogPost = async (c: Context) => {
         'Connection': 'keep-alive',
       },
     });
-
   } catch (error: any) {
     return c.json({ error: 'blog_posts.error.stylize', message: error.message }, 500);
   }
