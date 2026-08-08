@@ -171,52 +171,6 @@ describe('useBlogPosts Hook', () => {
     expect(result.current.globalError).toBe('api.error.unknown');
   });
 
-  it('should fetch single post for edit and reset form', async () => {
-    const mockPost = {
-      id: '1',
-      coverImageUrl: 'img.jpg',
-      isPublished: true,
-      translations: [
-        { language: 'en', slug: 'slug-en', title: 'title-en', excerpt: 'exc', content: 'cont' }
-      ]
-    };
-    vi.mocked(BlogPostService.getById).mockResolvedValue(mockPost as any);
-
-    const { result } = renderHook(() => useBlogPosts({ editId: '1' }));
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    expect(BlogPostService.getById).toHaveBeenCalledWith('1');
-    expect(mockReset).toHaveBeenCalledWith({
-      coverImageUrl: 'img.jpg',
-      isPublished: true,
-      translations: [
-        { language: 'en', slug: 'slug-en', title: 'title-en', excerpt: 'exc', content: 'cont' }
-      ]
-    });
-    expect(mockSetImagePreview).toHaveBeenCalledWith('img.jpg');
-  });
-
-  it('should fallback to defaults when editing a post with missing data', async () => {
-    const mockPost = { id: '1', translations: [] };
-    vi.mocked(BlogPostService.getById).mockResolvedValue(mockPost as any);
-
-    const { result } = renderHook(() => useBlogPosts({ editId: '1' }));
-
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-    });
-
-    expect(mockReset).toHaveBeenCalledWith({
-      coverImageUrl: '',
-      isPublished: false,
-      translations: [{ language: 'pt', slug: '', title: '', excerpt: '', content: '' }]
-    });
-    expect(mockSetImagePreview).toHaveBeenCalledWith(null);
-  });
-
   it('should handle edit fetch error', async () => {
     vi.mocked(BlogPostService.getById).mockRejectedValue({ error: 'edit.error' });
 
@@ -451,13 +405,93 @@ describe('useBlogPosts Hook', () => {
       result.current.appendTranslation();
     });
 
-    expect(mockAppend).toHaveBeenCalledWith({ language: 'en', slug: '', title: '', excerpt: '', content: '' });
+    expect(mockAppend).toHaveBeenCalledWith({
+      language: 'en',
+      slug: '',
+      title: '',
+      excerpt: '',
+      content: '',
+      metaTitle: '',
+      metaDescription: ''
+    });
 
     act(() => {
       result.current.removeTranslation(1);
     });
 
     expect(mockRemove).toHaveBeenCalledWith(1);
+  });
+
+  it('should fallback to defaults when editing a post with missing data', async () => {
+    const mockPost = { id: '1', translations: [] };
+    vi.mocked(BlogPostService.getById).mockResolvedValue(mockPost as any);
+
+    const { result } = renderHook(() => useBlogPosts({ editId: '1' }));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(mockReset).toHaveBeenCalledWith({
+      coverImageUrl: '',
+      ogImageUrl: '',
+      status: 'draft',
+      isFeatured: false,
+      publishedAt: null,
+      categoryIds: [],
+      tagIds: [],
+      translations: [{
+        language: 'pt',
+        slug: '',
+        title: '',
+        excerpt: '',
+        content: '',
+        metaTitle: '',
+        metaDescription: ''
+      }]
+    });
+    expect(mockSetImagePreview).toHaveBeenCalledWith(null);
+  });
+
+  it('should fetch single post for edit and reset form', async () => {
+    const mockPost = {
+      id: '1',
+      coverImageUrl: 'img.jpg',
+      translations: [
+        { language: 'en', slug: 'slug-en', title: 'title-en', excerpt: 'exc', content: 'cont' }
+      ]
+    };
+
+    vi.mocked(BlogPostService.getById).mockResolvedValue(mockPost as any);
+
+    const { result } = renderHook(() => useBlogPosts({ editId: '1' }));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(BlogPostService.getById).toHaveBeenCalledWith('1');
+    expect(mockReset).toHaveBeenCalledWith({
+      coverImageUrl: 'img.jpg',
+      ogImageUrl: '',
+      status: 'draft',
+      isFeatured: false,
+      publishedAt: null,
+      categoryIds: [],
+      tagIds: [],
+      translations: [
+        {
+          language: 'en',
+          slug: 'slug-en',
+          title: 'title-en',
+          excerpt: 'exc',
+          content: 'cont',
+          metaTitle: '',
+          metaDescription: ''
+        }
+      ]
+    });
+    expect(mockSetImagePreview).toHaveBeenCalledWith('img.jpg');
   });
 
   it('should successfully generate AI content', async () => {

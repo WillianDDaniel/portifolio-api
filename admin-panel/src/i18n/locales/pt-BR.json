@@ -419,7 +419,10 @@
         "slug": "Slug da URL",
         "publish_now": "Publicar Imediatamente",
         "publish_help": "Se desmarcado, será salvo como rascunho e oculto do público.",
-        "cover_image": "Imagem de Capa"
+        "cover_image": "Imagem de Capa",
+        "published_at": "Data de Publicação",
+        "is_featured": "Destaque",
+        "featured_help": "Se marcado, o post será marcado como destaque."
       },
       "placeholders": {
         "title": "Ex: Como criar uma API com Hono",
@@ -437,7 +440,9 @@
       },
       "statuses": {
         "draft": "Rascunho",
-        "published": "Publicado"
+        "published": "Publicado",
+        "scheduled": "Agendado",
+        "archived": "Arquivado"
       },
       "errors": {}
     },
@@ -515,6 +520,20 @@
         "profile_success": "Perfil atualizado com sucesso!"
       },
       "errors": {}
+    },
+    "taxonomies": {
+      "labels": {
+        "taxonomies": "Taxonomias",
+        "recent": "Recentes",
+        "categories": "Categorias",
+        "tags": "Tags",
+        "none_selected": "Nenhum selecionado",
+        "create": "Criar"
+      },
+      "placeholders": {
+        "search_or_create_categories": "Pesquisar ou criar categorias...",
+        "search_or_create_tags": "Pesquisar ou criar tags..."
+      }
     },
     "password": {
       "labels": {

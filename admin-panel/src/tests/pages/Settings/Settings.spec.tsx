@@ -94,7 +94,7 @@ describe('Settings Page Component', () => {
 
   const mockUpdateSettings = vi.fn((callback) => () => callback({ siteUrl: 'https://new-url.com' }));
   const mockCreateAiProvider = vi.fn((callback) => () => callback());
-  const mockUpdateAiProvider = vi.fn((id, callback) => () => callback());
+  const mockUpdateAiProvider = vi.fn((_, callback) => () => callback());
   const mockDeleteAiProvider = vi.fn();
   const mockResetAi = vi.fn();
 

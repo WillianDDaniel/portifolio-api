@@ -47,7 +47,7 @@ export default function BlogPostGeneralSettings({
                 id="status"
                 label={t('forms.blog_posts.labels.status', { defaultValue: 'Status' })}
                 options={['draft', 'scheduled', 'published', 'archived']}
-                translationGroup="forms.blog_posts.status"
+                translationGroup="forms.blog_posts.statuses"
                 {...register('status')}
               />
               <FormError error={!!errors.status} message={t(errors.status?.message as string)} />

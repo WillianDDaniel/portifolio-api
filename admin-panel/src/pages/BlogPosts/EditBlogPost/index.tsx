@@ -30,7 +30,9 @@ export default function EditBlogPost() {
     handleFileChange,
     generateAIContent,
     isGenerating,
-
+    isStylizing,
+    stylizeAIContent,
+    generateTableOfContents,
     handleSlugDebounce
   } = useBlogPosts({ editId: id });
 
@@ -52,6 +54,9 @@ export default function EditBlogPost() {
         onSubmitAction={updateBlogPost(id as string)}
         generateAIContent={generateAIContent}
         isGenerating={isGenerating}
+        isStylizing={isStylizing}
+        stylizeAIContent={stylizeAIContent}
+        generateTableOfContents={generateTableOfContents}
         handleSlugDebounce={handleSlugDebounce}
       />
     )

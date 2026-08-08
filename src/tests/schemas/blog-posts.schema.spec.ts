@@ -4,7 +4,8 @@ import { blogPostSchema } from '../../schemas/blog-posts.schema.js';
 describe('Blog Posts Zod Schema', () => {
   const validPayload = {
     coverImageUrl: 'https://example.com/image.jpg',
-    isPublished: true,
+    status: 'published' as const,
+    isFeatured: true,
     translations: [
       {
         language: 'en',
@@ -20,19 +21,17 @@ describe('Blog Posts Zod Schema', () => {
     const result = blogPostSchema.safeParse(validPayload);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toEqual({
-        ...validPayload,
-        isPublished: true,
-      });
+      expect(result.data).toEqual(validPayload);
     }
   });
 
-  it('should fallback isPublished to false if omitted', () => {
-    const { isPublished, ...payloadWithoutIsPublished } = validPayload;
-    const result = blogPostSchema.safeParse(payloadWithoutIsPublished);
+  it('should fallback status to draft and isFeatured to false if omitted', () => {
+    const { status, isFeatured, ...payloadWithoutDefaults } = validPayload;
+    const result = blogPostSchema.safeParse(payloadWithoutDefaults);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.isPublished).toBe(false);
+      expect(result.data.status).toBe('draft');
+      expect(result.data.isFeatured).toBe(false);
     }
   });
 
@@ -93,11 +92,11 @@ describe('Blog Posts Zod Schema', () => {
       ...validPayload,
       translations: [
         {
-          language: 'e', // min 2
-          slug: 'sl', // min 3
-          title: 'ti', // min 3
-          excerpt: 'short', // min 10
-          content: 'short', // min 10
+          language: 'e',
+          slug: 'sl',
+          title: 'ti',
+          excerpt: 'short',
+          content: 'short',
         },
       ],
     };

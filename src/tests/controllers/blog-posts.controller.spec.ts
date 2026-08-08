@@ -95,8 +95,10 @@ describe('Blog Posts Controller', () => {
           if (name) return mockParams[name];
           return mockParams;
         }),
+        query: vi.fn(),
       },
       json: vi.fn((data, status = 200) => ({ data, status })),
+      get: vi.fn().mockReturnValue({ id: 'author-123' }),
     };
   });
 
@@ -237,7 +239,7 @@ describe('Blog Posts Controller', () => {
   describe('createBlogPost', () => {
     const validPayload = {
       coverImageUrl: 'https://example.com/image.png',
-      isPublished: true,
+      status: 'published',
       translations: [
         {
           language: 'en',
@@ -259,17 +261,20 @@ describe('Blog Posts Controller', () => {
       expect(createBlogPostRecord).toHaveBeenCalledWith(
         expect.objectContaining({
           coverImageUrl: validPayload.coverImageUrl,
-          isPublished: validPayload.isPublished,
+          status: 'published',
+          authorId: 'author-123',
           publishedAt: expect.any(Date),
         }),
-        validPayload.translations
+        validPayload.translations,
+        undefined,
+        undefined
       );
       expect(mockContext.json).toHaveBeenCalledWith(mockNewPost, 201);
       expect(response.status).toBe(201);
     });
 
-    it('should set publishedAt to null if isPublished is false', async () => {
-      const unpublishedPayload = { ...validPayload, isPublished: false };
+    it('should set publishedAt to null if status is not published', async () => {
+      const unpublishedPayload = { ...validPayload, status: 'draft' };
       mockContext.req.json.mockResolvedValue(unpublishedPayload);
       const mockNewPost = { id: 'new-id', ...unpublishedPayload };
       vi.mocked(createBlogPostRecord).mockResolvedValue(mockNewPost as any);
@@ -279,10 +284,13 @@ describe('Blog Posts Controller', () => {
       expect(createBlogPostRecord).toHaveBeenCalledWith(
         expect.objectContaining({
           coverImageUrl: validPayload.coverImageUrl,
-          isPublished: false,
+          status: 'draft',
+          authorId: 'author-123',
           publishedAt: null,
         }),
-        validPayload.translations
+        validPayload.translations,
+        undefined,
+        undefined
       );
     });
 
@@ -307,7 +315,7 @@ describe('Blog Posts Controller', () => {
       const response = await createBlogPost(mockContext);
 
       expect(mockContext.json).toHaveBeenCalledWith(
-        { error: 'blog_posts.error.create', message: errorMsg },
+        { error: 'blog_posts.error.create', message: 'Create Failed' },
         500
       );
       expect(response.status).toBe(500);
@@ -317,7 +325,7 @@ describe('Blog Posts Controller', () => {
   describe('updateBlogPost', () => {
     const validPayload = {
       coverImageUrl: 'https://example.com/image.png',
-      isPublished: true,
+      status: 'published',
       translations: [
         {
           language: 'en',
@@ -346,16 +354,18 @@ describe('Blog Posts Controller', () => {
         'post-123',
         expect.objectContaining({
           coverImageUrl: validPayload.coverImageUrl,
-          isPublished: validPayload.isPublished,
+          status: 'published',
           publishedAt: expect.any(Date),
         }),
-        validPayload.translations
+        validPayload.translations,
+        undefined,
+        undefined
       );
       expect(mockContext.json).toHaveBeenCalledWith(mockUpdatedPost, 200);
       expect(response.status).toBe(200);
     });
 
-    it('should not update publishedAt if isPublished is true but it was already published', async () => {
+    it('should not update publishedAt if status is published but it was already published', async () => {
       mockParams = { id: 'post-123' };
       mockContext.req.json.mockResolvedValue(validPayload);
 

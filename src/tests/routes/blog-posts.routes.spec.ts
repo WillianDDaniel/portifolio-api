@@ -80,7 +80,8 @@ describe('Blog Posts Routes', () => {
   describe('Protected Routes', () => {
     const validBlogPostPayload = {
       coverImageUrl: 'https://example.com/image.png',
-      isPublished: true,
+      status: 'published',
+      isFeatured: true,
       translations: [
         {
           language: 'en',

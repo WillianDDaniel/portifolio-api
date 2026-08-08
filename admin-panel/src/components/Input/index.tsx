@@ -33,8 +33,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             onChange={handleInputChange}
             {...props}
-            className="
-              w-full pl-12 pr-4 py-3 rounded-lg text-sm transition-all duration-300
+            className={` ${children ? 'pl-12' : 'pl-4'}
+              w-full pr-4 py-3 rounded-lg text-sm transition-all duration-300
               bg-zinc-50 dark:bg-zinc-950
               border border-zinc-200 dark:border-zinc-700
               text-zinc-900 dark:text-zinc-100
@@ -45,7 +45,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               dark:[&:-webkit-autofill]:shadow-[inset_0_0_0px_1000px_var(--color-zinc-950)]
               [&:-webkit-autofill]:[-webkit-text-fill-color:var(--color-zinc-900)]
               dark:[&:-webkit-autofill]:[-webkit-text-fill-color:var(--color-zinc-100)]
-            "
+            `}
           />
         </div>
       </div>

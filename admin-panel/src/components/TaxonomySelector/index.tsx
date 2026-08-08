@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface TaxonomyOption {
@@ -18,15 +18,10 @@ interface TaxonomySelectorProps {
 }
 
 export default function TaxonomySelector({
-  label,
-  placeholder,
-  options,
-  value,
-  onChange,
-  onCreateOption,
-  error,
-  isCreating = false
+  label, placeholder, options, value, onChange,
+  onCreateOption, error, isCreating = false
 }: TaxonomySelectorProps) {
+
   const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -37,7 +32,8 @@ export default function TaxonomySelector({
     .filter((opt): opt is TaxonomyOption => opt !== undefined);
 
   const unselectedOptions = options.filter(opt => !value.includes(opt.id));
-  const recentOptions = unselectedOptions.slice(0, 5);
+
+  const recentOptions = options.slice(0, 5);
 
   const filteredOptions = unselectedOptions.filter(opt =>
     opt.name.toLowerCase().includes(inputValue.toLowerCase())
@@ -97,45 +93,61 @@ export default function TaxonomySelector({
       {recentOptions.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 mb-3">
           <span className="text-xs text-gray-500 dark:text-zinc-400 mr-1 font-medium">
-            {t('taxonomies.labels.recent', { defaultValue: 'Recent:' })}
+            {t('forms.taxonomies.labels.recent', { defaultValue: 'Recent:' })}
           </span>
-          {recentOptions.map(opt => (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => handleSelect(opt.id)}
-              className="px-2.5 py-1 text-[11px] uppercase tracking-wide font-semibold bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400 rounded-full border border-gray-200 dark:border-zinc-700 transition-colors flex items-center gap-1"
-            >
-              <span>+</span> {opt.name}
-            </button>
-          ))}
+          {recentOptions.map(opt => {
+            const isSelected = value.includes(opt.id);
+
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => isSelected ? handleRemove(opt.id) : handleSelect(opt.id)}
+                className={`px-2.5 py-1 text-[11px] uppercase tracking-wide font-semibold rounded-full border transition-all flex items-center gap-1
+                  ${isSelected
+                    ? 'bg-transparent text-gray-400 dark:text-zinc-500 border-gray-300 dark:border-zinc-600 border-dashed hover:border-red-300 hover:text-red-400'
+                    : 'bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-indigo-900/30 dark:hover:text-indigo-400 border-gray-200 dark:border-zinc-700'
+                  }`}
+              >
+                <span>{isSelected ? '✓' : '+'}</span> {opt.name}
+              </button>
+            )
+          })}
         </div>
       )}
 
+      <div className="flex flex-wrap gap-2 mb-3 bg-gray-50/50 dark:bg-zinc-900/30 p-2.5 rounded-lg border border-gray-100 dark:border-zinc-800/50 min-h-11.5 items-center">
+        {selectedOptions.length > 0 ? (
+          selectedOptions.map(opt => (
+            <span
+              key={opt.id}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-sm bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-md border border-indigo-100 dark:border-indigo-800/50 shadow-sm transition-all"
+            >
+              {opt.name}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove(opt.id);
+                }}
+                className="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200 focus:outline-none"
+              >
+                ✕
+              </button>
+            </span>
+          ))
+        ) : (
+          <span className="text-sm text-gray-400 dark:text-zinc-500 italic select-none px-1">
+            {t('forms.taxonomies.labels.none_selected', { defaultValue: 'No options selected' })}
+          </span>
+        )}
+      </div>
+
       <div
-        className={`flex flex-wrap gap-2 p-2 min-h-[46px] items-center bg-white dark:bg-zinc-900 border rounded-lg transition-colors focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 dark:focus-within:ring-indigo-600 ${error ? 'border-red-500' : 'border-gray-200 dark:border-zinc-700'
+        className={`flex items-center bg-white dark:bg-zinc-900 border rounded-lg transition-colors focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 dark:focus-within:ring-indigo-600 ${error ? 'border-red-500' : 'border-gray-200 dark:border-zinc-700'
           }`}
         onClick={() => setIsOpen(true)}
       >
-        {selectedOptions.map(opt => (
-          <span
-            key={opt.id}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-sm bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 rounded-md border border-indigo-100 dark:border-indigo-800/50"
-          >
-            {opt.name}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemove(opt.id);
-              }}
-              className="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200 focus:outline-none"
-            >
-              ✕
-            </button>
-          </span>
-        ))}
-
         <input
           type="text"
           value={inputValue}
@@ -145,13 +157,13 @@ export default function TaxonomySelector({
           }}
           onKeyDown={handleKeyDown}
           onFocus={() => setIsOpen(true)}
-          placeholder={selectedOptions.length === 0 ? placeholder : ''}
-          className="flex-1 min-w-[120px] bg-transparent text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 border-none focus:ring-0 p-1 outline-none"
+          placeholder={placeholder}
+          className="flex-1 w-full bg-transparent text-sm text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 border-none focus:ring-0 px-3 py-2.5 outline-none rounded-lg"
           disabled={isCreating}
         />
       </div>
 
-      {error && <span className="mt-1 text-sm text-red-500">{error}</span>}
+      {error && <span className="mt-1.5 text-sm text-red-500 font-medium">{error}</span>}
 
       {isOpen && (inputValue.trim() || filteredOptions.length > 0) && (
         <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg shadow-lg">
@@ -174,14 +186,8 @@ export default function TaxonomySelector({
                 {isCreating ? (
                   <span className="animate-pulse">{t('global.loading', { defaultValue: 'Creating...' })}</span>
                 ) : (
-                  <>➕ {t('forms.blog_posts.labels.create_new', { defaultValue: 'Create' })} "{inputValue}"</>
+                  <>➕ {t('forms.taxonomies.labels.create', { defaultValue: 'Create' })} "{inputValue}"</>
                 )}
-              </li>
-            )}
-
-            {!showCreate && filteredOptions.length === 0 && (
-              <li className="px-4 py-3 text-sm text-gray-500 dark:text-zinc-500 text-center">
-                {t('global.no_results', { defaultValue: 'No results found' })}
               </li>
             )}
           </ul>

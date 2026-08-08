@@ -35,7 +35,7 @@ export default function BlogPostCard({ post, onDelete }: BlogPostCardProps) {
         )}
 
         <div className="absolute top-3 right-3 flex gap-2">
-          {post.isPublished ? (
+          {post.status === 'published' ? (
             <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-semibold px-2 py-1 rounded shadow-sm flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               {t('forms.blog_posts.statuses.published', { defaultValue: 'Published' })}
